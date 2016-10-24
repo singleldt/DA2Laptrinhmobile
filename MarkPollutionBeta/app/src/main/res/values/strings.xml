@@ -27,5 +27,23 @@
     <string name="enter_description">Enter Description</string>
     <string name="enter_title">Enter title</string>
     <string name="imageview">ImageView</string>
-    <string name="buttonCamere">Capture</string>
+    <!--<string name="server_client_id">62807479997-90fkub1s4okl2gqqu2bfg6hpu2hck3sm.apps.googleusercontent.com</string>-->
+
+    <string name="title_activity_welcome">Home Screen</string>
+    <string name="next">NEXT</string>
+    <string name="skip">SKIP</string>
+    <string name="start">GOT IT</string>
+
+    <string name="slide_1_title">How to reduce pollution
+        to day ???</string>
+    <string name="slide_1_desc">This entire planet is our home. We are the only species that systematically destroy our own habitat.
+— Marianne Williamson</string>
+
+    <string name="slide_2_title">Pollution is Our Problem</string>
+    <string name="slide_2_desc">The action or process of making land, water, air, etc., dirty and not safe or suitable to use !
+    If we heal the earth, we heal ourselves</string>
+
+    <string name="slide_3_title">What do you think?</string>
+    <string name="slide_3_desc">One person alone cannot save the planet’s biodiversity, but each individual’s effort to encourage nature’s wealth must not be underestimated.!</string>
+    <string name="introtitle">MarkPollution</string>
 </resources>

@@ -1,6 +1,10 @@
 package com.project.markpollution;
 
 
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
@@ -13,47 +17,62 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.project.markpollution.CustomAdapter.ViewPagerAdapter;
 import com.project.markpollution.Fragments.MapsFragment;
 import com.project.markpollution.Fragments.NewsFeedFragment;
+import com.project.markpollution.ModelObject.PollutionPoint;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.ArrayList;
 
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, View.OnClickListener {
+        implements NavigationView.OnNavigationItemSelectedListener {
 
     ViewPagerAdapter adapter;
     private Toolbar toolbar;
     private TabLayout tabs;
     public ViewPager viewPager;
-//    public FloatingActionButton fab;
     private NavigationView navigationView;
     private DrawerLayout drawerLayout;
-//    private double latDemo, longitDemo;
+
+    public static ArrayList<PollutionPoint> listPo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         initView();
 
         setupViewPager(viewPager);
         tabs.setupWithViewPager(viewPager);
-//        setupTabIcons();
+        setNavigationHeader();
+        fetchData();
     }
 
     private void initView() {
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
         tabs = (TabLayout) findViewById(R.id.tabs);
         viewPager = (ViewPager) findViewById(R.id.viewpager);
-//        fab = (FloatingActionButton) findViewById(fab);
-        navigationView = (NavigationView) findViewById(R.id.nav_view);
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-
+        navigationView = (NavigationView) findViewById(R.id.nav_view);
 
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -61,7 +80,6 @@ public class MainActivity extends AppCompatActivity
         toggle.syncState();
 
         navigationView.setNavigationItemSelectedListener(this);
-//        fab.setOnClickListener(this);
     }
 
     private void setupViewPager(ViewPager viewPager) {
@@ -69,7 +87,6 @@ public class MainActivity extends AppCompatActivity
         adapter.addFragment(new NewsFeedFragment(), "NEWS FEED");
         adapter.addFragment(new MapsFragment(), "MAPS");
         viewPager.setAdapter(adapter);
-        //====================================================== TODO: ====================
         viewPager.requestTransparentRegion(viewPager);
     }
 
@@ -83,26 +100,71 @@ public class MainActivity extends AppCompatActivity
 //        tabs.getTabAt(1).setIcon(tabIcons[1]);
 //    }
 
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-//            case fab:
-////                Snackbar.make(v, "Replace with your own action", Snackbar.LENGTH_LONG)
-////                        .setAction("Action", null).show();
-////                Intent i = new Intent(this, SubmitMarkPollutionActivity.class);
-////                i.putExtra("lat", latDemo);
-////                i.putExtra("long", longitDemo);
-////                startActivity(i);
-//
-//                if (viewPager.getCurrentItem() == 0) {
-//                    viewPager.setCurrentItem(1);
-//                    Intent i = new Intent(this, SubmitMarkPollutionActivity.class);
-//                    startActivity(i);
-//                }else {
-//                    Intent i = new Intent(this, SubmitMarkPollutionActivity.class);
-//                    startActivity(i);
-//                }
-//                break;
+    private void setNavigationHeader(){
+        View view = navigationView.getHeaderView(0);
+        TextView tvNavName = (TextView) view.findViewById(R.id.username);
+        TextView tvNavEmail = (TextView) view.findViewById(R.id.email);
+        ImageView ivNavAvatar = (ImageView) view.findViewById(R.id.profile_image);
+
+        Intent intent = getIntent();
+        String name = intent.getStringExtra("name");
+        String email = intent.getStringExtra("email");
+        String avatar = intent.getStringExtra("avatar");
+        tvNavName.setText(name);
+        tvNavEmail.setText(email);
+        new getAvatar(ivNavAvatar).execute(avatar);
+    }
+
+    private class getAvatar extends AsyncTask<String, Void, Bitmap> {
+        ImageView imageView;
+
+        public getAvatar(ImageView imageView) {
+            this.imageView = imageView;
+        }
+
+        @Override
+        protected Bitmap doInBackground(String... params) {
+            String url = params[0];
+            Bitmap bitmap = null;
+            try {
+                InputStream inputStream = new URL(url).openStream();
+                bitmap = BitmapFactory.decodeStream(inputStream);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return bitmap;
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+            imageView.setImageBitmap(bitmap);
+        }
+    }
+
+    private void fetchData(){
+        Intent intent = getIntent();
+        String po_data = intent.getStringExtra("po_data");
+        try {
+            JSONObject jObj = new JSONObject(po_data);
+            JSONArray arr = jObj.getJSONArray("result");
+            listPo = new ArrayList<>();
+            for(int i=0; i<arr.length(); i++){
+                JSONObject po = arr.getJSONObject(i);
+                String id_po = po.getString("id_po");
+                String id_cate = po.getString("id_cate");
+                String id_user = po.getString("id_user");
+                double lat = po.getDouble("lat");
+                double lng = po.getDouble("lng");
+                String title = po.getString("title");
+                String desc = po.getString("desc");
+                String image = po.getString("image");
+                String time = po.getString("time");
+
+                listPo.add(new PollutionPoint(id_po, id_cate, id_user, lat, lng, title, desc, image, time));
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
     }
 
