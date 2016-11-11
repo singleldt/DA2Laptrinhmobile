@@ -4,10 +4,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
-import android.os.Bundle;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
 import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,10 +18,10 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.project.markpollution.Controller.PrefManager;
+import com.project.markpollution.CustomAdapter.PrefManager;
+import com.rd.PageIndicatorView;
 
 public class WelcomeActivity extends AppCompatActivity {
-
     private ViewPager viewPager;
     private MyViewPagerAdapter myViewPagerAdapter;
     private LinearLayout dotsLayout;
@@ -49,13 +49,15 @@ public class WelcomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_welcome);
 
         viewPager = (ViewPager) findViewById(R.id.view_pager);
-        dotsLayout = (LinearLayout) findViewById(R.id.layoutDots);
+        PageIndicatorView pageIndicatorView = (PageIndicatorView) findViewById(R.id.pageIndicatorView);
+        pageIndicatorView.setViewPager(viewPager);
+
+//        dotsLayout = (LinearLayout) findViewById(R.id.layoutDots);
         btnSkip = (Button) findViewById(R.id.btn_skip);
         btnNext = (Button) findViewById(R.id.btn_next);
 
 
         // layouts of all welcome sliders
-        // add few more layouts if you want
         layouts = new int[]{
                 R.layout.welcome_slide1,
                 R.layout.welcome_slide2,
@@ -63,7 +65,7 @@ public class WelcomeActivity extends AppCompatActivity {
         };
 
         // adding bottom dots
-        addBottomDots(0);
+//        addBottomDots(0);
 
         // making notification bar transparent
         changeStatusBarColor();
@@ -95,24 +97,23 @@ public class WelcomeActivity extends AppCompatActivity {
         });
     }
 
-    private void addBottomDots(int currentPage) {
-        dots = new TextView[layouts.length];
-
-        int[] colorsActive = getResources().getIntArray(R.array.array_dot_active);
-        int[] colorsInactive = getResources().getIntArray(R.array.array_dot_inactive);
-
-        dotsLayout.removeAllViews();
-        for (int i = 0; i < dots.length; i++) {
-            dots[i] = new TextView(this);
-            dots[i].setText(Html.fromHtml("&#8226;"));
-            dots[i].setTextSize(35);
-            dots[i].setTextColor(colorsInactive[currentPage]);
-            dotsLayout.addView(dots[i]);
-        }
-
-        if (dots.length > 0)
-            dots[currentPage].setTextColor(colorsActive[currentPage]);
-    }
+//    private void addBottomDots(int currentPage) {
+//        dots = new TextView[layouts.length];
+//
+//        int[] colorsActive = getResources().getIntArray(R.array.array_dot_active);
+//        int[] colorsInactive = getResources().getIntArray(R.array.array_dot_inactive);
+//
+//        dotsLayout.removeAllViews();
+//        for (int i = 0; i < dots.length; i++) {
+//            dots[i] = new TextView(this);
+//            dots[i].setText(Html.fromHtml("&#8226;"));
+//            dots[i].setTextSize(35);
+//            dots[i].setTextColor(colorsInactive[currentPage]);
+//            dotsLayout.addView(dots[i]);
+//        }
+//
+//        if (dots.length > 0) dots[currentPage].setTextColor(colorsActive[currentPage]);
+//    }
 
     private int getItem(int i) {
         return viewPager.getCurrentItem() + i;
@@ -129,7 +130,7 @@ public class WelcomeActivity extends AppCompatActivity {
 
         @Override
         public void onPageSelected(int position) {
-            addBottomDots(position);
+//            addBottomDots(position);
 
             // changing the next button text 'NEXT' / 'GOT IT'
             if (position == layouts.length - 1) {

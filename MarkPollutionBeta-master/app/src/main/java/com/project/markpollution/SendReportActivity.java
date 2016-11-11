@@ -3,7 +3,6 @@ package com.project.markpollution;
 import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -22,7 +21,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
-import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,10 +30,6 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.google.android.gms.appindexing.Action;
-import com.google.android.gms.appindexing.AppIndex;
-import com.google.android.gms.appindexing.Thing;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -50,6 +44,7 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.project.markpollution.Objects.Category;
+import com.project.markpollution.Objects.Report;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -79,11 +74,6 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
     private String id_cate;     // to store id's category on selected item (In spinner)
     private FirebaseDatabase firebaseDatabase;
     private DatabaseReference databaseReference;
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
-    private GoogleApiClient client;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -102,9 +92,6 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
         loadSpinner();
         getCateID();
 
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
     private void initView() {
@@ -142,6 +129,7 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
             public void onClick(View v) {
                 final Dialog dialog = new Dialog(SendReportActivity.this);
                 dialog.setContentView(R.layout.custom_dialog_choose_media);
+                dialog.setTitle("Select option:");
                 dialog.show();
 
                 TextView tvCapture = (TextView) dialog.findViewById(R.id.btnCapture);
@@ -164,25 +152,25 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
         });
     }
 
-    private void capture() {
+    private void capture(){
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         startActivityForResult(intent, 10);
     }
 
-    private void choosePictureFromGallery() {
+    private void choosePictureFromGallery(){
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("image/*");
         startActivityForResult(Intent.createChooser(intent, "Choose picture"), 11);
     }
 
     private Bitmap rotateImageIfRequired(Bitmap img, Uri UriImage) {
-        if (getRotation(UriImage) != 0) {
+        if(getRotation(UriImage)!=0){
             Matrix matrix = new Matrix();
             matrix.postRotate(getRotation(UriImage));
             Bitmap rotatedImg = Bitmap.createBitmap(img, 0, 0, img.getWidth(), img.getHeight(), matrix, true);
             img.recycle();
             return rotatedImg;
-        } else {
+        }else{
             return img;
         }
     }
@@ -199,7 +187,8 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
         return rotation;
     }
 
-    private String getPicturePath(Uri uriImage) {
+    private String getPicturePath(Uri uriImage)
+    {
         String[] filePathColumn = {MediaStore.Images.Media.DATA};
         Cursor cursor = getContentResolver().query(uriImage,
                 filePathColumn, null, null, null);
@@ -225,7 +214,7 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
         int photoH = bmOptions.outHeight;
 
         // Determine how much to scale down the image
-        int scaleFactor = Math.min(photoW / targetW, photoH / targetH);
+        int scaleFactor = Math.min(photoW/targetW, photoH/targetH);
 
         // Decode the image file into a Bitmap sized to fill the View
         bmOptions.inJustDecodeBounds = false;
@@ -238,12 +227,12 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 10 && resultCode == RESULT_OK) {
+        if(requestCode == 10 && resultCode == RESULT_OK){
             String picPath = getPicturePath(data.getData());
             Bitmap bm = setPic(picPath);    // resize picture
             Bitmap bitmap = rotateImageIfRequired(bm, data.getData());  // rotate picture with right orientation
             ivCamera.setImageBitmap(bitmap);
-        } else if (requestCode == 11 && resultCode == RESULT_OK) {
+        }else if(requestCode == 11 && resultCode == RESULT_OK){
             Uri uri = data.getData();
             Bitmap bm = null;
             try {
@@ -256,12 +245,12 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
         }
     }
 
-    private String getUserID() {
-        SharedPreferences sharedPreferences = getSharedPreferences("sharedpref_id_user", MODE_PRIVATE);
-        return sharedPreferences.getString("sharedpref_id_user", "");
+    private String getUserID(){
+        SharedPreferences sharedPreferences = getSharedPreferences("sharedpref_id_user",MODE_PRIVATE);
+        return sharedPreferences.getString("sharedpref_id_user","");
     }
 
-    private void loadSpinner() {
+    private void loadSpinner(){
         StringRequest stringReq = new StringRequest(Request.Method.GET, url_retrieve_cate, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
@@ -269,13 +258,14 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
                     JSONObject jObj = new JSONObject(response);
                     JSONArray arr = jObj.getJSONArray("result");
                     listCate = new ArrayList<>();
-                    for (int i = 0; i < arr.length(); i++) {
+                    for (int i=0; i<arr.length(); i++){
                         JSONObject cate = arr.getJSONObject(i);
                         listCate.add(new Category(cate.getString("id_cate"), cate.getString("name_cate")));
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
+
                 ArrayAdapter<Category> adapter = new ArrayAdapter<>(SendReportActivity.this, android.R.layout.simple_list_item_1, listCate);
                 spCate.setAdapter(adapter);
             }
@@ -290,7 +280,7 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
         Volley.newRequestQueue(this).add(stringReq);
     }
 
-    private void getCateID() {
+    private void getCateID(){
         spCate.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -307,9 +297,9 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
 
     @Override
     public void onClick(View v) {
-        if (v == btnSubmit) {
+        if(v == btnSubmit){
             StorageReference storeRef = storage.getReferenceFromUrl("gs://markpollution.appspot.com");
-            StorageReference picRef = storeRef.child("images/IMG_" + new SimpleDateFormat("ddMMyyyy_hhmmss").format(new Date()) + ".jpg");
+            StorageReference picRef = storeRef.child("images/IMG_" + new SimpleDateFormat("ddMMyyyy_hhmmss").format(new Date())+".jpg");
 
             // set enable drawing catch & build drawing catch for imageView
             ivCamera.setDrawingCacheEnabled(true);
@@ -336,9 +326,10 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
                         @Override
                         public void onResponse(String response) {
                             // Trigger report on Firebase Database;
-                            DatabaseReference refReport = databaseReference.child("Reports");
-                            if (!response.equals("insert pollution point failure")) {
-                                refReport.setValue(response);
+                            DatabaseReference refReport = databaseReference.child("NewReports");
+                            if(!response.equals("insert pollution point failure")){
+//                                refReport.setValue(response);
+                                refReport.setValue(new Report(response, getUserID()));
                                 Toast.makeText(SendReportActivity.this, "Insert pollution successful", Toast
                                         .LENGTH_SHORT).show();
                             }
@@ -351,7 +342,7 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
                             Log.e("Volley", error.getMessage());
                             finish();
                         }
-                    }) {
+                    }){
                         @Override
                         protected Map<String, String> getParams() throws AuthFailureError {
                             Map<String, String> params = new HashMap<>();
@@ -371,41 +362,5 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
                 }
             });
         }
-    }
-
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
-    public Action getIndexApiAction() {
-        Thing object = new Thing.Builder()
-                .setName("SendReport Page") // TODO: Define a title for the content shown.
-                // TODO: Make sure this auto-generated URL is correct.
-                .setUrl(Uri.parse("http://[ENTER-YOUR-URL-HERE]"))
-                .build();
-        return new Action.Builder(Action.TYPE_VIEW)
-                .setObject(object)
-                .setActionStatus(Action.STATUS_TYPE_COMPLETED)
-                .build();
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client.connect();
-        AppIndex.AppIndexApi.start(client, getIndexApiAction());
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        AppIndex.AppIndexApi.end(client, getIndexApiAction());
-        client.disconnect();
     }
 }

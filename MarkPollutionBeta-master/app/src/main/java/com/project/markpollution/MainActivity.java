@@ -1,10 +1,9 @@
 package com.project.markpollution;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.FloatingActionButton;
@@ -23,14 +22,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.SlidingDrawer;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -46,16 +41,22 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.project.markpollution.CustomAdapter.CircleTransform;
 import com.project.markpollution.CustomAdapter.FeedRecyclerViewAdapter;
 import com.project.markpollution.CustomAdapter.PopupInfoWindowAdapter;
+import com.project.markpollution.Interfaces.OnItemClickListener;
 import com.project.markpollution.Objects.Category;
 import com.project.markpollution.Objects.PollutionPoint;
+import com.project.markpollution.Objects.Report;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
@@ -71,14 +72,14 @@ public class MainActivity extends AppCompatActivity
         OnMapReadyCallback,
         View.OnClickListener,
         GoogleMap.OnInfoWindowClickListener {
-    String[] nameArray = {"Aestro", "Blender", "Cupcake", "Donut", "Eclair", "Froyo", "GingerBread", "HoneyComb", "IceCream Sandwich", "JelliBean", "KitKat", "Lollipop", "MarshMallow"};
-
     private NavigationView navigationView;
     private FloatingActionButton fab;
     private SupportMapFragment mapFragment;
     private GoogleMap mMap;
     private Spinner spnCate;
     private ImageView imgGetLocation;
+    private TextView tvRefresh;
+    private SlidingDrawer simpleSlidingDrawer;
     public static ArrayList<PollutionPoint> listPo;
     private List<Category> listCate;
     private List<PollutionPoint> listPoByCateID;
@@ -90,20 +91,22 @@ public class MainActivity extends AppCompatActivity
     private String url_retrieve_cate = "http://indi.com.vn/dev/markpollution/RetrieveCategory.php";
     private String url_RetrievePollutionByCateID = "http://indi.com.vn/dev/markpollution/RetrievePollutionBy_CateID.php?id_cate=";
     private String url_RetrievePollutionOrderByRate = "http://indi.com.vn/dev/markpollution/RetrievePollutionOrderByRate.php";
+    private BottomSheetBehavior bottomSheetBehavior;
+    private FeedRecyclerViewAdapter feedAdapter;
     private RecyclerView recyclerViewFeed;
+    private List<Marker> listMarkers;
+    private boolean isFirstTimeLaunch = true;
+    private ArrayAdapter<Category> cateAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (Build.VERSION.SDK_INT >= 21) {
-            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-        }
         setContentView(R.layout.activity_main);
-        changeStatusBarColor();
         fetchData();
         initView();
         setNavigationHeader();
         loadSpinnerCate();
+        listenNewPollution();
     }
 
     private void initView() {
@@ -115,7 +118,15 @@ public class MainActivity extends AppCompatActivity
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
-        SlidingDrawer simpleSlidingDrawer = (SlidingDrawer) findViewById(R.id.simpleSlidingDrawer); // initiate the SlidingDrawer
+        navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+        mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        imgGetLocation = (ImageView) findViewById(R.id.imgGetLocation);
+        spnCate = (Spinner) findViewById(R.id.spnCateMap);
+        tvRefresh = (TextView) findViewById(R.id.textViewRefresh);
+
+        // initiate the SlidingDrawer
+        simpleSlidingDrawer = (SlidingDrawer) findViewById(R.id.simpleSlidingDrawer);
         final ImageButton handleButton = (ImageButton) findViewById(R.id.handle);
         simpleSlidingDrawer.setOnDrawerOpenListener(new SlidingDrawer.OnDrawerOpenListener() {
             @Override
@@ -123,20 +134,15 @@ public class MainActivity extends AppCompatActivity
                 handleButton.setImageResource(R.drawable.ic_expand_00000);
             }
         });
-        // implement setOnDrawerCloseListener event
         simpleSlidingDrawer.setOnDrawerCloseListener(new SlidingDrawer.OnDrawerCloseListener() {
             @Override
             public void onDrawerClosed() {
-                // change the handle button text
                 handleButton.setImageResource(R.drawable.ic_expand_00010);
             }
         });
-        navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
-        mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
-        imgGetLocation = (ImageView) findViewById(R.id.imgGetLocation);
-        spnCate = (Spinner) findViewById(R.id.spnCateMap);
         recyclerViewFeed = (RecyclerView) findViewById(R.id.recyclerViewFeed);
+        LinearLayoutManager layout = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        recyclerViewFeed.setLayoutManager(layout);
 
         // initialize firebase
         firebaseDatabase = FirebaseDatabase.getInstance();
@@ -171,9 +177,6 @@ public class MainActivity extends AppCompatActivity
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
-        // simultaneously listening data changed on Firebase
-//        listenDataChanged();
     }
 
     private void setNavigationHeader() {
@@ -188,7 +191,7 @@ public class MainActivity extends AppCompatActivity
         String avatar = intent.getStringExtra("avatar");
         tvNavName.setText(name);
         tvNavEmail.setText(email);
-        Picasso.with(this).load(Uri.parse(avatar)).resize(250, 250).transform(new CircleTransform()).into(ivNavAvatar);
+        Picasso.with(this).load(Uri.parse(avatar)).resize(170,170).transform(new CircleTransform()).into(ivNavAvatar);
     }
 
     private void loadSpinnerCate() {
@@ -208,11 +211,11 @@ public class MainActivity extends AppCompatActivity
                     e.printStackTrace();
                 }
 
-                ArrayAdapter<Category> adapter = new ArrayAdapter<>(MainActivity.this, android.R.layout
+                cateAdapter = new ArrayAdapter<>(MainActivity.this, android.R.layout
                         .simple_spinner_item,
                         listCate);
-                adapter.setDropDownViewResource(android.R.layout.simple_list_item_single_choice);
-                spnCate.setAdapter(adapter);
+                cateAdapter.setDropDownViewResource(android.R.layout.simple_list_item_single_choice);
+                spnCate.setAdapter(cateAdapter);
             }
         }, new Response.ErrorListener() {
             @Override
@@ -238,7 +241,6 @@ public class MainActivity extends AppCompatActivity
         }
 
         filterPollutionByCate(googleMap);
-        loadRecyclerViewFeed();
 
         googleMap.setMyLocationEnabled(true);
         googleMap.getUiSettings().setMyLocationButtonEnabled(true);
@@ -248,56 +250,60 @@ public class MainActivity extends AppCompatActivity
     private void addMarker(GoogleMap map, PollutionPoint po) {
         Marker marker = map.addMarker(new MarkerOptions().position(new LatLng(po.getLat(), po.getLng()))
                 .title(po.getTitle())
+                .icon(BitmapDescriptorFactory.fromResource(setIconMaker(po.getId_cate())))
                 .snippet(po.getDesc()));
         marker.setTag(po.getId());
+        // when marker is created. Add it into List<Marker>
+        listMarkers.add(marker);
 
         images.put(marker.getId(), Uri.parse(po.getImage()));
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(marker.getPosition(), 17));
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(marker.getPosition(), 12));
 
     }
+    private int setIconMaker(String id){
+        int idIcon = 0;
+        switch (id){
+            case "1":
+               idIcon = R.drawable.maker_land_icon;
+                break;
+            case "2" :
+                idIcon = R.drawable.maker_watter_icon;
+                break;
+            case "3":
+                idIcon = R.drawable.maker_air_icon;
+                break;
+            case "4" :
+                idIcon = R.drawable.maker_thermal_icon;
+                break;
+            case "5":
+                idIcon = R.drawable.maker_light_icon;
+                break;
+            case "6" :
+                idIcon = R.drawable.maker_noise_icon;
+                break;
+            default:
+                break;
 
-    // Each time filter pollutionPoints by Category. It requests to server => Maybe I'll load data from static List<PollutionPoint>
-    // Get pollution points by cateID and extract into map
-    private void getPollutionByCateID(String CateID) {
-        String completed_RetrievePollutionByCateID = url_RetrievePollutionByCateID + CateID;
-        JsonObjectRequest objReq = new JsonObjectRequest(Request.Method.GET, completed_RetrievePollutionByCateID, null,
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        try {
-                            JSONArray arr = response.getJSONArray("result");
-                            listPoByCateID = new ArrayList<>();
-                            for (int i = 0; i < arr.length(); i++) {
-                                JSONObject po = arr.getJSONObject(i);
-                                String id_po = po.getString("id_po");
-                                String id_cate = po.getString("id_cate");
-                                String id_user = po.getString("id_user");
-                                double lat = po.getDouble("lat");
-                                double lng = po.getDouble("lng");
-                                String title = po.getString("title");
-                                String desc = po.getString("desc");
-                                String image = po.getString("image");
-                                String time = po.getString("time");
+        }
+        return idIcon;
+    }
 
-                                listPoByCateID.add(new PollutionPoint(id_po, id_cate, id_user, lat, lng, title, desc, image, time));
-                            }
-                            // extract markers in list<> markers into the map
-                            mMap.clear();
-                            for (PollutionPoint po : listPoByCateID) {
-                                addMarker(mMap, po);
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Toast.makeText(MainActivity.this, error.getMessage(), Toast.LENGTH_SHORT).show();
+    private void getPollutionByCateID(String CateId){
+        listPoByCateID = new ArrayList<>(); // reinitialize list
+        for(PollutionPoint po: listPo){
+            if (po.getId_cate().equals(CateId)){
+                listPoByCateID.add(po);
             }
-        });
+        }
+        // extract listPoByCateID into map. Don't forget reinitialize list markers
+        listMarkers = new ArrayList<>();
+        mMap.clear();   // clear old map
+        for(PollutionPoint po: listPoByCateID){
+            addMarker(mMap, po);
+        }
 
-        Volley.newRequestQueue(MainActivity.this).add(objReq);
+        // load infoPanel (SlidingDrawer)
+        loadSlidingDrawerFeed(listPoByCateID);
     }
 
     private void filterPollutionByCate(final GoogleMap googleMap){
@@ -312,9 +318,12 @@ public class MainActivity extends AppCompatActivity
                     getPollutionByCateID(CateID);
                 }else{
                     googleMap.clear();
+                    listMarkers = new ArrayList<>();    // each time filter category reinitialize List markers
                     for (PollutionPoint po : listPo) {
                         addMarker(googleMap, po);
                     }
+                    // load slidingDrawer
+                    loadSlidingDrawerFeed(listPo);
                 }
             }
 
@@ -361,10 +370,96 @@ public class MainActivity extends AppCompatActivity
         Volley.newRequestQueue(this).add(objReq);
     }
 
-    private void loadRecyclerViewFeed(){
-        LinearLayoutManager layout = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
-        recyclerViewFeed.setLayoutManager(layout);
-        recyclerViewFeed.setAdapter(new FeedRecyclerViewAdapter(this, listPo));
+    private void loadSlidingDrawerFeed(List<PollutionPoint> list){
+        simpleSlidingDrawer.open();
+
+        feedAdapter = new FeedRecyclerViewAdapter(this, list);
+        recyclerViewFeed.setAdapter(feedAdapter);
+        feedAdapter.setOnItemClickListener(new OnItemClickListener() {
+            @Override
+            public void onItemClick(PollutionPoint po) {
+                for(Marker m: listMarkers){
+                    if(m.getTag().toString().equals(po.getId())){
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(m.getPosition(), 12));
+                        m.showInfoWindow();
+                        break;
+                    }
+                }
+            }
+        });
+    }
+
+    private void listenNewPollution(){
+        DatabaseReference refReport = databaseReference.child("NewReports");
+        refReport.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Report obj = dataSnapshot.getValue(Report.class);
+                if(!obj.getId_user().equals(getUserID())){
+                    if(!isFirstTimeLaunch){
+                        tvRefresh.setVisibility(View.VISIBLE);
+                        refreshData();
+                    }
+                }
+                isFirstTimeLaunch = false;
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void refreshData(){
+        tvRefresh.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                StringRequest strReq = new StringRequest(Request.Method.GET, url_retrive_pollutionPoint, new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        if(!response.equals("Error when retrieve all pollution points")){
+                            try {
+                                JSONObject json = new JSONObject(response);
+                                JSONArray arr = json.getJSONArray("result");
+                                listPo = new ArrayList<>();     // reinitialize list<Po>
+                                for(int i=0; i<arr.length(); i++){
+                                    JSONObject po = arr.getJSONObject(i);
+                                    String id_po = po.getString("id_po");
+                                    String id_cate = po.getString("id_cate");
+                                    String id_user = po.getString("id_user");
+                                    double lat = po.getDouble("lat");
+                                    double lng = po.getDouble("lng");
+                                    String title = po.getString("title");
+                                    String desc = po.getString("desc");
+                                    String image = po.getString("image");
+                                    String time = po.getString("time");
+
+                                    listPo.add(new PollutionPoint(id_po, id_cate, id_user, lat, lng, title, desc, image, time));
+                                }
+                                spnCate.setAdapter(cateAdapter);    // notifyDataSetChanged for spinnerCate
+                                tvRefresh.setVisibility(View.INVISIBLE);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(MainActivity.this, error.getMessage(), Toast.LENGTH_SHORT).show();
+                        Log.e("Volley", error.getMessage());
+                    }
+                });
+
+                Volley.newRequestQueue(MainActivity.this).add(strReq);
+            }
+        });
+    }
+
+    private String getUserID(){
+        SharedPreferences sharedPreferences = getSharedPreferences("sharedpref_id_user",MODE_PRIVATE);
+        return sharedPreferences.getString("sharedpref_id_user","");
     }
 
     @Override
@@ -445,11 +540,8 @@ public class MainActivity extends AppCompatActivity
         intent.putExtra("id_po", marker.getTag().toString());
         startActivity(intent);
     }
-    private void changeStatusBarColor() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            Window window = getWindow();
-            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-            window.setStatusBarColor(Color.TRANSPARENT);
-        }
-    }
+
+//    private void testAnimateCamera(){
+//        Button btnTest = (Button) findViewById(R.id.buttonTest);
+//    }
 }

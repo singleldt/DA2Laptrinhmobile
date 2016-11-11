@@ -58,7 +58,7 @@
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:srcCompat="@drawable/ic_comment"
+            app:srcCompat="@drawable/ic_cmt"
             android:layout_below="@+id/imageViewPicReportMgr"
             android:layout_toRightOf="@+id/textViewTimeReportMgr"
             android:layout_toEndOf="@+id/textViewTimeReportMgr"
@@ -79,7 +79,7 @@
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:srcCompat="@drawable/ic_rate"
+            app:srcCompat="@drawable/ic_rates"
             android:layout_below="@+id/imageViewPicReportMgr"
             android:layout_toRightOf="@+id/textViewCommentReportMgr"
             android:layout_toEndOf="@+id/textViewCommentReportMgr"

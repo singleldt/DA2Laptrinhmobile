@@ -1,45 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-android:layout_width="fill_parent"
-    android:background="@color/white"
-android:layout_height="fill_parent" >
+    android:layout_width="fill_parent"
+    android:background="#FFFFFF"
+    android:layout_height="fill_parent" >
 
-<ImageView
-    android:id="@+id/image1"
-    android:layout_width="70dp"
-    android:layout_height="70dp"
-    android:src="@drawable/capture_icon" />
-<TextView
-    android:id="@+id/btnCapture"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="@string/action_capture"
-    android:gravity="center"
-    android:layout_toRightOf="@+id/image1"
-    android:textAlignment="viewStart"
-    android:textAppearance="?android:attr/textAppearanceLarge"
-    android:layout_alignParentTop="true"
-    android:layout_above="@+id/image2"
-    android:layout_alignParentRight="true"
-    android:layout_alignParentEnd="true" />
-<ImageView
-    android:layout_width="70dp"
-    android:layout_height="70dp"
-    android:src="@drawable/gallery_icon"
-    android:id="@+id/image2"
-    android:layout_below="@+id/image1"/>
-<TextView
-    android:id="@+id/btnGallery"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:gravity="center"
-    android:textAlignment="viewStart"
-    android:text="@string/button_choosefromgallery"
-    android:layout_toRightOf="@+id/image2"
-    android:textAppearance="?android:attr/textAppearanceLarge"
-    android:layout_below="@+id/image1"
-    android:layout_alignParentRight="true"
-    android:layout_alignParentEnd="true"
-    android:layout_alignBottom="@+id/image2" />
+    <ImageView
+        android:id="@+id/image1"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:src="@drawable/capture_icon"
+         />
+    <TextView
+        android:id="@+id/btnCapture"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/button_capture"
+        android:gravity="center"
+        android:layout_toRightOf="@+id/image1"
+        android:textAlignment="viewStart"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:layout_alignParentTop="true"
+        android:layout_above="@+id/image2"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+    <ImageView
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:background="@drawable/gallery_icon"
+        android:id="@+id/image2"
+        android:layout_below="@+id/image1"/>
+    <TextView
+        android:id="@+id/btnGallery"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textAlignment="viewStart"
+        android:text="@string/button_choosefromgallery"
+        android:layout_toRightOf="@+id/image2"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:layout_below="@+id/image1"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignBottom="@+id/image2" />
 
 </RelativeLayout>
