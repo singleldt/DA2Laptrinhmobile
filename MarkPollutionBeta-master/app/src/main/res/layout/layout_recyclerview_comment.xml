@@ -23,7 +23,7 @@
         android:id="@+id/textViewNameComment"
         android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
         android:textStyle="normal|bold"
-        android:textColor="@color/cast_expanded_controller_background_color"
+        android:textColor="#365899"
         android:layout_marginLeft="8dp"/>
 
     <TextView
@@ -43,6 +43,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:id="@+id/textViewComment"
+        android:textColor="#000000"
         android:text="I have seen this point. It is very pollution"
         android:layout_below="@+id/imageViewAvatarComment"
         android:layout_alignParentLeft="true"

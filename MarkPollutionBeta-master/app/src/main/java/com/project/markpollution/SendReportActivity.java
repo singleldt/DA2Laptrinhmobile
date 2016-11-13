@@ -15,12 +15,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -43,6 +44,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.project.markpollution.CustomAdapter.CustomSpinnerAdapter;
 import com.project.markpollution.Objects.Category;
 import com.project.markpollution.Objects.Report;
 
@@ -80,6 +82,7 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_send_report);
         // reference to map fragment then get async from it
+        this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE| WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.mapSubmit);
         mapFragment.getMapAsync(this);
@@ -108,7 +111,7 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        // Get intent from MapFragment
+        // Get intent from MainActivity
         Intent i = getIntent();
         lat = i.getDoubleExtra("Lat", 0);
         lng = i.getDoubleExtra("Long", 0);
@@ -118,8 +121,8 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
                 .title("This is Pollution Point "))
                 .showInfoWindow();
 
-        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(point, 17));
-        googleMap.getUiSettings().setAllGesturesEnabled(false);
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(point, 12));
+        googleMap.getUiSettings().setAllGesturesEnabled(true);
         googleMap.getUiSettings().setMapToolbarEnabled(false);
     }
 
@@ -129,11 +132,10 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
             public void onClick(View v) {
                 final Dialog dialog = new Dialog(SendReportActivity.this);
                 dialog.setContentView(R.layout.custom_dialog_choose_media);
-                dialog.setTitle("Select option:");
                 dialog.show();
 
-                TextView tvCapture = (TextView) dialog.findViewById(R.id.btnCapture);
-                TextView tvGallery = (TextView) dialog.findViewById(R.id.btnGallery);
+                TextView tvCapture = (TextView) dialog.findViewById(R.id.textViewCapture);
+                TextView tvGallery = (TextView) dialog.findViewById(R.id.textViewGallery);
                 tvCapture.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -266,7 +268,8 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
                     e.printStackTrace();
                 }
 
-                ArrayAdapter<Category> adapter = new ArrayAdapter<>(SendReportActivity.this, android.R.layout.simple_list_item_1, listCate);
+//                ArrayAdapter<Category> adapter = new ArrayAdapter<>(SendReportActivity.this, android.R.layout.simple_list_item_1, listCate);
+                SpinnerAdapter adapter = new CustomSpinnerAdapter(SendReportActivity.this,R.layout.custom_spinner,listCate);
                 spCate.setAdapter(adapter);
             }
         }, new Response.ErrorListener() {
@@ -328,11 +331,12 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
                             // Trigger report on Firebase Database;
                             DatabaseReference refReport = databaseReference.child("NewReports");
                             if(!response.equals("insert pollution point failure")){
-//                                refReport.setValue(response);
                                 refReport.setValue(new Report(response, getUserID()));
                                 Toast.makeText(SendReportActivity.this, "Insert pollution successful", Toast
                                         .LENGTH_SHORT).show();
                             }
+                            // return MainActivity and trigger Refresh data
+                            MainActivity.triggerRefreshData = true;
                             finish();
                         }
                     }, new Response.ErrorListener() {

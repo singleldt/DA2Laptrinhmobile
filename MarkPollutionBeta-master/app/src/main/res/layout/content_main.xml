@@ -51,12 +51,18 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/textViewRefresh"
                 android:text="New pollution point(s) have reported! \nClick here to reload..."
-                android:textColor="#ffffff"
-                android:background="#0d16ba"
+                android:textColor="#FFFFFF"
+                android:background="@drawable/style_boder_backgrounblue"
                 android:layout_marginTop="16dp"
                 android:textAlignment="center"
                 android:visibility="invisible"/>
         </LinearLayout>
+
+      <!--  <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/btnTest"
+            android:text="Test"/>-->
     </FrameLayout>
 
     <SlidingDrawer
@@ -73,8 +79,8 @@
             android:id="@id/handle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@color/bg_screen2"
             android:src="@drawable/ic_expand_00010"
+            android:background="#ca20d2bb"
             android:rotation="270"
             android:text="Open"
             android:textColor="#fff" />

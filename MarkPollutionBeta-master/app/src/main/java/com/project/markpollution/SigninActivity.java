@@ -2,15 +2,11 @@ package com.project.markpollution;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
-import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
@@ -27,6 +23,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.project.markpollution.Controller.AlertDialogManager;
+import com.project.markpollution.Controller.ConnectivityReceiver;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -42,11 +40,8 @@ public class SigninActivity extends AppCompatActivity implements GoogleApiClient
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (Build.VERSION.SDK_INT >= 21) {
-            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-        }
         setContentView(R.layout.activity_signin);
-        changeStatusBarColor();
+        checkConnection();
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder()
                 .requestEmail()
                 .requestProfile()
@@ -75,7 +70,21 @@ public class SigninActivity extends AppCompatActivity implements GoogleApiClient
         Intent intent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient);
         startActivityForResult(intent, 111);
     }
+    private void checkConnection() {
+        boolean isConnected = ConnectivityReceiver.isConnected();
+        showSnack(isConnected);
+    }
+    private void showSnack(boolean isConnected) {
+        AlertDialogManager alert = new AlertDialogManager();
+        String message;
+        if (isConnected) {
 
+        } else {
+            message = "Sorry, we couldn't connect to internet.";
+            alert.showAlertDialog(SigninActivity.this, "Connection failed..", message);
+        }
+
+    }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -117,6 +126,12 @@ public class SigninActivity extends AppCompatActivity implements GoogleApiClient
                 Toast.makeText(this, result.getStatus().toString(), Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        checkConnection();
     }
 
     private void saveUserIDtoSharedPreferences(String email, final String id_user, boolean isUserExist){
@@ -199,12 +214,5 @@ public class SigninActivity extends AppCompatActivity implements GoogleApiClient
             }
         });
         Volley.newRequestQueue(this).add(stringRequest);
-    }
-    private void changeStatusBarColor() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            Window window = getWindow();
-            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-            window.setStatusBarColor(Color.TRANSPARENT);
-        }
     }
 }

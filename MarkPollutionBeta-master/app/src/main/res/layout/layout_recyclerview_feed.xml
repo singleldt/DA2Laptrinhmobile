@@ -73,7 +73,7 @@
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:srcCompat="@drawable/ic_rates"
+        app:srcCompat="@drawable/ic_rate"
         android:layout_below="@+id/imageViewPictureFeed"
         android:layout_toLeftOf="@+id/textViewRateFeed"
         android:layout_toStartOf="@+id/textViewRateFeed"
@@ -95,7 +95,7 @@
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:srcCompat="@drawable/ic_cmt"
+        app:srcCompat="@drawable/ic_comment"
         android:layout_below="@+id/imageViewPictureFeed"
         android:layout_toLeftOf="@+id/textViewCommentFeed"
         android:layout_toStartOf="@+id/textViewCommentFeed"

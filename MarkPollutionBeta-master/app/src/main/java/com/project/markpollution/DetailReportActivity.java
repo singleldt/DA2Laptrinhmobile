@@ -2,7 +2,9 @@ package com.project.markpollution;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -11,7 +13,9 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RatingBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -72,6 +76,7 @@ public class DetailReportActivity extends AppCompatActivity implements OnMapRead
     private String id_po;
     private List<Comment> listComment = new ArrayList<>();
     private boolean isFirstTimeShowRate = false;
+    private boolean isImageFitToScreen;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,6 +94,20 @@ public class DetailReportActivity extends AppCompatActivity implements OnMapRead
         showSpamStatusWhenStartup();
         showResolveStatusWhenStartup();
         insertResolve();
+        ivPicture.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(DetailReportActivity.this, Fullscreenimage.class);
+
+                ivPicture.buildDrawingCache();
+                Bitmap image= ivPicture.getDrawingCache();
+
+                Bundle extras = new Bundle();
+                extras.putParcelable("imagebitmap", image);
+                intent.putExtras(extras);
+                startActivity(intent);
+            }
+        });
     }
 
     private void initView() {
@@ -561,4 +580,5 @@ public class DetailReportActivity extends AppCompatActivity implements OnMapRead
 
         Volley.newRequestQueue(DetailReportActivity.this).add(strReq);
     }
+
 }

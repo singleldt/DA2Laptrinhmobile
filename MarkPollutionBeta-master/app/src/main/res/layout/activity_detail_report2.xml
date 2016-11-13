@@ -30,7 +30,7 @@
             android:layout_below="@+id/mapDetail"
             android:layout_alignParentStart="true"
             android:layout_alignParentLeft="true"
-            android:layout_marginTop="5sp"/>
+            android:layout_marginTop="2dp"/>
         <TextView
             android:id="@+id/textViewTimeDetail"
             android:text="hh:mm:ss dd/MM/yyyy"
@@ -39,7 +39,7 @@
             android:layout_below="@+id/mapDetail"
             android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true"
-            android:layout_marginTop="10sp" />
+            android:layout_marginTop="14dp" />
         <TextView
             android:id="@+id/textViewEmailDetail"
             android:text="user@gmail.com"
@@ -131,8 +131,8 @@
             android:layout_below="@+id/textViewDescDetail"
             android:textStyle="normal|bold|italic"
             android:layout_marginTop="8dp"
-            android:background="@drawable/style_boder_backgrounblue"
-            android:textColor="#FFFFFF" />
+            android:background="@color/colorPrimary"
+            android:textColor="@color/cast_libraries_material_featurehighlight_text_body_color" />
         <EditText
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

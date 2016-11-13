@@ -47,21 +47,26 @@
         <Spinner
             android:id="@+id/spinnerCate"
             android:layout_width="match_parent"
+            android:background="@drawable/style_boder_nobackgroud"
             android:layout_height="wrap_content"
             />
 
         <EditText
             android:id="@+id/editTextSubmitTitle"
+            android:layout_marginTop="5sp"
             android:layout_width="match_parent"
+            android:background="@drawable/style_boder_nobackgroud"
             android:layout_height="wrap_content"
-            android:hint="input title" />
+            android:hint="@string/input_title" />
 
         <EditText
             android:id="@+id/editTextSubmitDesc"
+            android:layout_marginTop="5sp"
             android:layout_width="match_parent"
             android:layout_height="150dp"
+            android:background="@drawable/style_boder_nobackgroud"
             android:gravity="start"
-            android:hint="input description"
+            android:hint="@string/input_description"
             android:scrollbars="vertical" />
 
         <Button
