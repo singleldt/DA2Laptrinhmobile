@@ -23,7 +23,7 @@
         android:background="@android:color/transparent"
         android:paddingBottom="2dp"
         android:textColor="#FFFFFF"
-        android:text="Close" />
+        android:text="@string/action_close" />
     <TextView
         android:id="@+id/tvAds"
         android:layout_width="wrap_content"
@@ -36,6 +36,6 @@
         android:paddingBottom="2dp"
         android:background="@android:color/transparent"
         android:textColor="#FFFFFF"
-        android:text="By MarkPollution" />
+        android:text="@string/tvByMarkPo" />
 
 </RelativeLayout>

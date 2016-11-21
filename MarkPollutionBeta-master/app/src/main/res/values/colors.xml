@@ -23,5 +23,7 @@
 
     <color name="fill_circle">#b52be60a</color>
     <color name="Yellow">#FFEB3B</color>
+    <color name="comment">#365899</color>
+    <color name="black">#000000</color>
 
 </resources>

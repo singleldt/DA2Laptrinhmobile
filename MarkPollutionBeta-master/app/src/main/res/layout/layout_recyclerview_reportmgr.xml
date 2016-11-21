@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_height="wrap_content"
+    android:id="@+id/cardView"
     android:layout_width="match_parent"
-    app:cardUseCompatPadding="true"
-    >
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/feed_item_margin"
+    app:cardCornerRadius="@dimen/feed_item_corner_radius"
+    app:cardElevation="@dimen/activity_vertical_margin">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:padding="5sp"
         android:id="@+id/container_reportMgr">
 
         <ImageView
@@ -39,10 +42,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:maxLines="3"
+            android:textColor="@color/black"
             android:layout_below="@+id/textViewTitleReportMgr"
             android:layout_alignLeft="@+id/textViewTitleReportMgr"
             android:layout_alignStart="@+id/textViewTitleReportMgr"
-            android:id="@+id/textViewDescReportMgr" />
+            android:id="@+id/textViewDescReportMgr"
+            android:layout_above="@+id/textViewRateReportMgr" />
 
         <TextView
             android:text="hh:mm:ss dd/MM/yyyy"
@@ -50,52 +55,49 @@
             android:layout_height="wrap_content"
             android:id="@+id/textViewTimeReportMgr"
             android:textStyle="normal|italic"
-            android:layout_below="@+id/imageViewPicReportMgr"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
-            android:layout_marginTop="4dp" />
-
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:srcCompat="@drawable/ic_comment"
-            android:layout_below="@+id/imageViewPicReportMgr"
-            android:layout_toRightOf="@+id/textViewTimeReportMgr"
-            android:layout_toEndOf="@+id/textViewTimeReportMgr"
-            android:id="@+id/imageViewCommentReportMgr"
-            android:layout_marginLeft="16dp" />
+            android:layout_below="@+id/imageViewPicReportMgr" />
 
         <TextView
             android:text="999"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignTop="@+id/textViewTimeReportMgr"
-            android:layout_toRightOf="@+id/imageViewCommentReportMgr"
-            android:layout_toEndOf="@+id/imageViewCommentReportMgr"
-            android:id="@+id/textViewCommentReportMgr"
+            android:id="@+id/textViewRateReportMgr"
             android:textStyle="normal|italic"
-            android:layout_marginLeft="2dp" />
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignTop="@+id/textViewCommentReportMgr" />
 
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:srcCompat="@drawable/ic_rate"
-            android:layout_below="@+id/imageViewPicReportMgr"
-            android:layout_toRightOf="@+id/textViewCommentReportMgr"
-            android:layout_toEndOf="@+id/textViewCommentReportMgr"
-            android:layout_marginLeft="19dp"
-            android:layout_marginStart="19dp"
-            android:id="@+id/imageViewRateReportMgr" />
-
+            android:id="@+id/imageViewRateReportMgr"
+            android:layout_toLeftOf="@+id/textViewRateReportMgr"
+            android:layout_below="@+id/textViewDescReportMgr" />
         <TextView
             android:text="999"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignTop="@+id/textViewCommentReportMgr"
-            android:layout_toRightOf="@+id/imageViewRateReportMgr"
-            android:layout_toEndOf="@+id/imageViewRateReportMgr"
-            android:id="@+id/textViewRateReportMgr"
+            android:id="@+id/textViewCommentReportMgr"
             android:textStyle="normal|italic"
-            android:layout_marginLeft="2dp" />
+            android:layout_alignTop="@+id/imageViewCommentReportMgr"
+            android:layout_toRightOf="@+id/imageViewCommentReportMgr"
+            android:layout_marginLeft="13dp"
+            android:layout_marginStart="13dp"
+            android:layout_toLeftOf="@+id/imageViewRateReportMgr"
+            android:layout_toStartOf="@+id/imageViewRateReportMgr" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:srcCompat="@drawable/ic_comment"
+            android:id="@+id/imageViewCommentReportMgr"
+            android:layout_alignBottom="@+id/textViewTimeReportMgr"
+            android:layout_toLeftOf="@+id/imageViewRateReportMgr"
+            android:layout_toStartOf="@+id/imageViewRateReportMgr"
+            android:layout_marginRight="20dp"
+            android:layout_marginEnd="20dp" />
     </RelativeLayout>
 </android.support.v7.widget.CardView>

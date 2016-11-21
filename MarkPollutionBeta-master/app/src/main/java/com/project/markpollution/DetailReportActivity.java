@@ -1,21 +1,23 @@
 package com.project.markpollution;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.os.Build;
+import android.support.design.widget.Snackbar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.RatingBar;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,10 +35,16 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.project.markpollution.CustomAdapter.CircleTransform;
 import com.project.markpollution.CustomAdapter.CommentRecyclerViewAdapter;
 import com.project.markpollution.Objects.Comment;
 import com.project.markpollution.Objects.PollutionPoint;
+import com.project.markpollution.Objects.Report;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
@@ -53,7 +61,7 @@ import java.util.Map;
 
 public class DetailReportActivity extends AppCompatActivity implements OnMapReadyCallback {
     private SupportMapFragment mapFragment;
-    private ImageView ivPicture, ivAvatar, ivSpam, ivResolved, ivSendComment;
+    private ImageView ivPicture, ivAvatar, ivSpam, ivResolved, ivSendComment, ivDelete_Admin, ivResolved_Admin;
     private RatingBar ratingBar;
     private TextView tvTitle, tvDesc, tvRate, tvTime, tvEmail, tvCate;
     private EditText etComment;
@@ -71,12 +79,16 @@ public class DetailReportActivity extends AppCompatActivity implements OnMapRead
     private String url_CheckUserSpamOrNot = "http://indi.com.vn/dev/markpollution/CheckUserSpamOrNot.php?id_user=";
     private String url_InsertResolve = "http://indi.com.vn/dev/markpollution/InsertResolve.php";
     private String url_CheckUserCheckResolveOrNot = "http://indi.com.vn/dev/markpollution/CheckUserCheckResolvedOrNot.php?id_user=";
+    private String url_DeletePoById = "http://indi.com.vn/dev/markpollution//DeletePollutionById.php?id_po=";
     private GoogleMap gMap;
     private double lat, lng;
     private String id_po;
     private List<Comment> listComment = new ArrayList<>();
     private boolean isFirstTimeShowRate = false;
-    private boolean isImageFitToScreen;
+    private boolean is_admin;
+    private FirebaseDatabase firebaseDatabase;
+    private DatabaseReference databaseReference;
+    private boolean isFirstTimeRun = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,6 +97,7 @@ public class DetailReportActivity extends AppCompatActivity implements OnMapRead
 
         initView();
         getPoInfo();
+        checkIsAdminOrNotToModifyDetailReport();
         sendComment();
         retrieveComments();
         checkUserRatedOrNotToInsertOrUpdate();
@@ -94,6 +107,8 @@ public class DetailReportActivity extends AppCompatActivity implements OnMapRead
         showSpamStatusWhenStartup();
         showResolveStatusWhenStartup();
         insertResolve();
+        deleteReport();
+        refreshDataWhenDeleteReport();
         ivPicture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -108,6 +123,23 @@ public class DetailReportActivity extends AppCompatActivity implements OnMapRead
                 startActivity(intent);
             }
         });
+        etComment.addTextChangedListener(new TextWatcher() {
+
+            public void afterTextChanged(Editable s) {
+                if (s.length()==0){
+                    ivSendComment.setVisibility(View.GONE);
+                }
+            }
+
+            public void beforeTextChanged(CharSequence s, int start,
+                                          int count, int after) {
+            }
+
+            public void onTextChanged(CharSequence s, int start,
+                                      int before, int count) {
+                ivSendComment.setVisibility(View.VISIBLE);
+            }
+        });
     }
 
     private void initView() {
@@ -117,6 +149,8 @@ public class DetailReportActivity extends AppCompatActivity implements OnMapRead
         ivSpam = (ImageView) findViewById(R.id.imageViewSpam);
         ivResolved = (ImageView) findViewById(R.id.imageViewResolved);
         ivSendComment = (ImageView) findViewById(R.id.imageViewSendComment);
+        ivDelete_Admin = (ImageView) findViewById(R.id.imageViewDelete_Admin);
+        ivResolved_Admin = (ImageView) findViewById(R.id.imageViewResolved_Admin);
         ratingBar = (RatingBar) findViewById(R.id.ratingBar);
         tvTitle = (TextView) findViewById(R.id.textViewTitleDetail);
         tvDesc = (TextView) findViewById(R.id.textViewDescDetail);
@@ -131,6 +165,9 @@ public class DetailReportActivity extends AppCompatActivity implements OnMapRead
         recyclerViewComment.setLayoutManager(layout);
 
         mapFragment.getMapAsync(this);
+        // initialize Firebase;
+        firebaseDatabase = FirebaseDatabase.getInstance();
+        databaseReference = firebaseDatabase.getReference();
     }
 
     private void getPoInfo() {
@@ -247,7 +284,7 @@ public class DetailReportActivity extends AppCompatActivity implements OnMapRead
         Marker marker = googleMap.addMarker(new MarkerOptions().position(point).title(title));
         marker.showInfoWindow();
 
-        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(point, 16));
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(point, 12));
         googleMap.getUiSettings().setMapToolbarEnabled(false);
     }
 
@@ -461,10 +498,11 @@ public class DetailReportActivity extends AppCompatActivity implements OnMapRead
                     public void onResponse(String response) {
                         if(response.equals("You have unchecked spam")){
                             setIconSpam(false);
+                            Toast.makeText(DetailReportActivity.this, R.string.uncheck_spam, Toast.LENGTH_SHORT).show();
                         }else if(response.equals("Spam successful")){
                             setIconSpam(true);
+                            Toast.makeText(DetailReportActivity.this, R.string.check_spam, Toast.LENGTH_SHORT).show();
                         }
-                        Toast.makeText(DetailReportActivity.this, response, Toast.LENGTH_SHORT).show();
                     }
                 }, new Response.ErrorListener() {
                     @Override
@@ -532,11 +570,12 @@ public class DetailReportActivity extends AppCompatActivity implements OnMapRead
                     @Override
                     public void onResponse(String response) {
                         if(response.equals("You have unchecked resolve")){
+                            Toast.makeText(DetailReportActivity.this, R.string.uncheck_resolve, Toast.LENGTH_SHORT).show();
                             setIconResolve(false);
                         }else if(response.equals("Check resolved successful")){
+                            Toast.makeText(DetailReportActivity.this, R.string.check_resolve, Toast.LENGTH_SHORT).show();
                             setIconResolve(true);
                         }
-                        Toast.makeText(DetailReportActivity.this, response, Toast.LENGTH_SHORT).show();
                     }
                 }, new Response.ErrorListener() {
                     @Override
@@ -581,4 +620,96 @@ public class DetailReportActivity extends AppCompatActivity implements OnMapRead
         Volley.newRequestQueue(DetailReportActivity.this).add(strReq);
     }
 
+    private void checkIsAdminOrNotToModifyDetailReport(){
+        Intent intent = getIntent();
+        is_admin = intent.getBooleanExtra("admin", false);
+        if(is_admin){
+            ivSpam.setVisibility(View.INVISIBLE);
+            ivResolved.setVisibility(View.INVISIBLE);
+
+            ivDelete_Admin.setVisibility(View.VISIBLE);
+            ivResolved_Admin.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void deleteReport(){
+        ivDelete_Admin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Snackbar.make(view, R.string.askdelete_byadmin, Snackbar.LENGTH_INDEFINITE).setAction("OK",
+                        new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                StringRequest strReq = new StringRequest(Request.Method.GET, url_DeletePoById +
+                                        id_po, new Response.Listener<String>() {
+                                    @Override
+                                    public void onResponse(String response) {
+                                        if(response.equals("Delete pollution successful")){
+                                            Toast.makeText(DetailReportActivity.this, response, Toast.LENGTH_SHORT).show();
+                                            notifyRefreshData();    // put a trigger on firebase
+
+                                            // From twice data changed. Toggle trigger refresh data in MainActivity
+                                            MainActivity.triggerRefreshData = true;
+
+                                            // return AdminActivity to reload data
+                                            finish();
+                                        }else {
+                                            Toast.makeText(DetailReportActivity.this, response, Toast.LENGTH_SHORT).show();
+                                        }
+                                    }
+                                }, new Response.ErrorListener() {
+                                    @Override
+                                    public void onErrorResponse(VolleyError error) {
+                                        Toast.makeText(DetailReportActivity.this, error.getMessage(), Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+
+                                Volley.newRequestQueue(DetailReportActivity.this).add(strReq);
+                            }
+                        }).show();
+            }
+        });
+    }
+
+    // Put a trigger on Firebase to notify to another users
+    private void notifyRefreshData(){
+        DatabaseReference refDeleteReport = databaseReference.child("DeleteReports");
+        refDeleteReport.setValue(new Report(id_po, getUserID()));
+    }
+
+    private void refreshDataWhenDeleteReport(){
+            DatabaseReference refDeleteReport = databaseReference.child("DeleteReports");
+            refDeleteReport.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if(!isFirstTimeRun){
+                    Report report = dataSnapshot.getValue(Report.class);
+                        if(!report.getId_user().equals(getUserID()) && report.getId_report().equals(id_po)){
+                            alertDialog(getResources().getString(R.string.delete_byadmin));
+                        }
+                    }
+                    isFirstTimeRun = false;
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+    }
+
+    private void alertDialog(String msg){
+        AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+        dialog.setTitle(getResources().getString(R.string.warning));
+        dialog.setMessage(msg);
+        dialog.setCancelable(false);
+        dialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                // Toggle trigger refresh data in MainActivity
+                MainActivity.triggerRefreshData = true;
+                finish();
+            }
+        }).show();
+    }
 }

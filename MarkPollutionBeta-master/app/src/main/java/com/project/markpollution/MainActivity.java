@@ -8,16 +8,17 @@ import android.graphics.Color;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.SubMenu;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -35,13 +36,15 @@ import android.widget.SlidingDrawer;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.github.clans.fab.FloatingActionMenu;
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
@@ -63,12 +66,15 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.TileOverlay;
+import com.google.android.gms.maps.model.TileOverlayOptions;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.maps.android.SphericalUtil;
+import com.google.maps.android.heatmaps.HeatmapTileProvider;
 import com.project.markpollution.CustomAdapter.CircleTransform;
 import com.project.markpollution.CustomAdapter.FeedRecyclerViewAdapter;
 import com.project.markpollution.CustomAdapter.PopupInfoWindowAdapter;
@@ -86,8 +92,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener,
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,
         OnMapReadyCallback,
         View.OnClickListener,
         GoogleMap.OnInfoWindowClickListener,
@@ -95,7 +100,7 @@ public class MainActivity extends AppCompatActivity
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener {
     private NavigationView navigationView;
-    private FloatingActionButton fab;
+    private android.support.design.widget.FloatingActionButton fab;
     private SupportMapFragment mapFragment;
     private GoogleMap mMap;
     private Spinner spnCate;
@@ -113,22 +118,26 @@ public class MainActivity extends AppCompatActivity
     private DatabaseReference databaseReference;
     private String url_retrive_pollutionPoint = "http://indi.com.vn/dev/markpollution/RetrievePollutionPoint.php";
     private String url_retrieve_cate = "http://indi.com.vn/dev/markpollution/RetrieveCategory.php";
-    //    private String url_RetrievePollutionByCateID = "http://indi.com.vn/dev/markpollution/RetrievePollutionBy_CateID.php?id_cate=";
+    private String url_RetrieveUserByID = "http://indi.com.vn/dev/markpollution/RetrieveUserById.php?id_user=";
     private String url_RetrievePollutionOrderByRate = "http://indi.com.vn/dev/markpollution/RetrievePollutionOrderByRate.php";
     private String url_RetrievePollutionOrderByTime = "http://indi.com.vn/dev/markpollution/RetrievePollutionOrderByTime.php";
-    //    private BottomSheetBehavior bottomSheetBehavior;
     private FeedRecyclerViewAdapter feedAdapter;
     private RecyclerView recyclerViewFeed;
     private List<Marker> listMarkers;
     private boolean isFirstTimeLaunch = true;
+    private boolean isFirstTimeLaunch_DeleteReportListener = true;
     private ArrayAdapter<Category> cateAdapter;
     public static boolean triggerRefreshData = false;
-
-    private GoogleApiClient mGoogleApiClient;
+    private GoogleApiClient mGoogleApiClient, googleApiClient;
     private LocationRequest locationRequest;
     private final static int REQUEST_CHECK_SETTINGS = 9;
     private Location curLocation;
     private boolean isMarkPoint = true;
+    private HeatmapTileProvider mProvider;
+    private TileOverlay mOverlay;
+    FloatingActionMenu fab_Category;
+    com.github.clans.fab.FloatingActionButton fab_land, fab_water, fab_thermal,fab_noise,fab_light,fab_air;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -138,13 +147,22 @@ public class MainActivity extends AppCompatActivity
         configCheckLocation();
         setNavigationHeader();
         loadSpinnerCate();
-        listenNewPollution();
+        listenNewReport();
+        listenDeleteReport();
+        showAdminMenu();
     }
 
     private void initView() {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab = (android.support.design.widget.FloatingActionButton) findViewById(R.id.fab);
+        fab_Category  = (FloatingActionMenu) findViewById(R.id.fab_category);
+        fab_air = (com.github.clans.fab.FloatingActionButton) findViewById(R.id.fab_airPO);
+        fab_noise = (com.github.clans.fab.FloatingActionButton) findViewById(R.id.fab_noisePO);
+        fab_thermal = (com.github.clans.fab.FloatingActionButton) findViewById(R.id.fab_thermalPO);
+        fab_water = (com.github.clans.fab.FloatingActionButton) findViewById(R.id.fab_waterPO);
+        fab_land = (com.github.clans.fab.FloatingActionButton) findViewById(R.id.fab_landPO);
+        fab_light = (com.github.clans.fab.FloatingActionButton) findViewById(R.id.fab_lightPO);
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -182,6 +200,12 @@ public class MainActivity extends AppCompatActivity
 
         mapFragment.getMapAsync(this);
         fab.setOnClickListener(this);
+        fab_light.setOnClickListener(this);
+        fab_land.setOnClickListener(this);
+        fab_water.setOnClickListener(this);
+        fab_thermal.setOnClickListener(this);
+        fab_air.setOnClickListener(this);
+        fab_noise.setOnClickListener(this);
     }
 
     // Fetch data from SigninActivity sent
@@ -297,25 +321,25 @@ public class MainActivity extends AppCompatActivity
         hasmapMarkers.put(marker.getId(), po);
     }
 
-    private int setIconMarker(String id){
+    private int setIconMarker(String id) {
         int idIcon = 0;
-        switch (id){
+        switch (id) {
             case "1":
                 idIcon = R.drawable.marker_land_icon;
                 break;
-            case "2" :
-                idIcon = R.drawable.marker_watter_icon;
+            case "2":
+                idIcon = R.drawable.marker_water_icon;
                 break;
             case "3":
                 idIcon = R.drawable.marker_air_icon;
                 break;
-            case "4" :
+            case "4":
                 idIcon = R.drawable.marker_thermal_icon;
                 break;
             case "5":
                 idIcon = R.drawable.marker_light_icon;
                 break;
-            case "6" :
+            case "6":
                 idIcon = R.drawable.marker_noise_icon;
                 break;
             default:
@@ -463,13 +487,15 @@ public class MainActivity extends AppCompatActivity
 
     private void getNearByPollution() {
         // getNearbyPollution
+        String radius = restoringPreferences() + "000";
+        int ra = Integer.parseInt(radius);
         listNearbyPo = new ArrayList<>();
         for (PollutionPoint po : listPo) {
             LatLng latLng = new LatLng(po.getLat(), po.getLng());
             double distance = SphericalUtil.computeDistanceBetween(new LatLng(curLocation.getLatitude(),
-                    curLocation.getLongitude()),
+                            curLocation.getLongitude()),
                     latLng);
-            if (distance <= 1000) {
+            if (distance <= ra) {
                 listNearbyPo.add(po);
             }
         }
@@ -477,7 +503,7 @@ public class MainActivity extends AppCompatActivity
         // add NearbyPo markers into map
         listMarkers = new ArrayList<>();
         mMap.clear();
-        for(PollutionPoint po: listNearbyPo){
+        for (PollutionPoint po : listNearbyPo) {
             addMarker(mMap, po);
         }
 
@@ -502,6 +528,12 @@ public class MainActivity extends AppCompatActivity
         loadSlidingDrawerFeed(listNearbyPo);
     }
 
+    public String restoringPreferences() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        String language = prefs.getString("radius", "");
+        return language;
+    }
+
     private void loadSlidingDrawerFeed(List<PollutionPoint> list) {
         simpleSlidingDrawer.open();
 
@@ -522,19 +554,77 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
-    private void listenNewPollution() {
-        DatabaseReference refReport = databaseReference.child("NewReports");
-        refReport.addValueEventListener(new ValueEventListener() {
+    private void listenNewReport() {
+        DatabaseReference refNewReport = databaseReference.child("NewReports");
+        refNewReport.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Report obj = dataSnapshot.getValue(Report.class);
-                if (!obj.getId_user().equals(getUserID())) {
+                Report report = dataSnapshot.getValue(Report.class);
+                if (!report.getId_user().equals(getUserID())) {
                     if (!isFirstTimeLaunch) {
                         tvRefresh.setVisibility(View.VISIBLE);
                         refreshData();
                     }
                 }
                 isFirstTimeLaunch = false;
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void listenDeleteReport() {
+        DatabaseReference refDeleteReport = databaseReference.child("DeleteReports");
+        refDeleteReport.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Report report = dataSnapshot.getValue(Report.class);
+                if (!report.getId_user().equals(getUserID())) {
+                    if (!isFirstTimeLaunch_DeleteReportListener) {
+                        // Refresh data
+                        StringRequest strReq = new StringRequest(Request.Method.GET, url_retrive_pollutionPoint, new Response.Listener<String>() {
+                            @Override
+                            public void onResponse(String response) {
+                                if (!response.equals("Error when retrieve all pollution points")) {
+                                    try {
+                                        JSONObject json = new JSONObject(response);
+                                        JSONArray arr = json.getJSONArray("result");
+                                        listPo = new ArrayList<>();     // reinitialize list<Po>
+                                        for (int i = 0; i < arr.length(); i++) {
+                                            JSONObject po = arr.getJSONObject(i);
+                                            String id_po = po.getString("id_po");
+                                            String id_cate = po.getString("id_cate");
+                                            String id_user = po.getString("id_user");
+                                            double lat = po.getDouble("lat");
+                                            double lng = po.getDouble("lng");
+                                            String title = po.getString("title");
+                                            String desc = po.getString("desc");
+                                            String image = po.getString("image");
+                                            String time = po.getString("time");
+
+                                            listPo.add(new PollutionPoint(id_po, id_cate, id_user, lat, lng, title, desc, image, time));
+                                        }
+                                        spnCate.setAdapter(cateAdapter);    // notifyDataSetChanged for spinnerCate
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            }
+                        }, new Response.ErrorListener() {
+                            @Override
+                            public void onErrorResponse(VolleyError error) {
+                                Toast.makeText(MainActivity.this, error.getMessage(), Toast.LENGTH_SHORT).show();
+                                Log.e("Volley", error.getMessage());
+                            }
+                        });
+
+                        Volley.newRequestQueue(MainActivity.this).add(strReq);
+                    }
+                }
+                isFirstTimeLaunch_DeleteReportListener = false;
             }
 
             @Override
@@ -571,6 +661,9 @@ public class MainActivity extends AppCompatActivity
                                     listPo.add(new PollutionPoint(id_po, id_cate, id_user, lat, lng, title, desc, image, time));
                                 }
                                 spnCate.setAdapter(cateAdapter);    // notifyDataSetChanged for spinnerCate
+                                // show RecentPollution
+                                getRecentPollution();
+
                                 tvRefresh.setVisibility(View.INVISIBLE);
                             } catch (JSONException e) {
                                 e.printStackTrace();
@@ -703,10 +796,14 @@ public class MainActivity extends AppCompatActivity
             getNearByPollution();
         } else if (id == R.id.nav_seriousPo) {
             getSeriousPollution();
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
+        } else if (id == R.id.nav_admin) {
+            startActivity(new Intent(this, AdminActivity.class));
+        } else if (id == R.id.nav_logout) {
+            logout();
+        } else if (id == R.id.nav_setting) {
+            startActivity(new Intent(this, SetupsActivity.class));
+        } else if (id == R.id.nav_heatMaps) {
+            showHeatMaps();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -716,30 +813,52 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onClick(View view) {
-        if (view == fab) {
-            Snackbar snackbar = Snackbar.make(view, "Mark the pollution point and click Button ", Snackbar.LENGTH_INDEFINITE);
-            if(isMarkPoint){
-                isMarkPoint = false;
-                fab.setImageResource(R.drawable.checkmark);
-                snackbar.setAction("Cancel",
-                        new View.OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
-                                isMarkPoint = true;
-                                fab.setImageResource(android.R.drawable.ic_input_add);
-                            }
-                        }).show();
+        switch (view.getId()){
+            case R.id.fab :
+                final Snackbar snackbar = Snackbar.make(view, R.string.tvNewreport, Snackbar.LENGTH_LONG);
+                if (isMarkPoint) {
+                    isMarkPoint = false;
+                    imgGetLocation.setVisibility(View.VISIBLE);
+                    fab.setImageResource(R.drawable.mr_ic_close_dark);
+                    snackbar.setAction("OK",
+                            new View.OnClickListener() {
+                                @Override
+                                public void onClick(View view) {
+                                    isMarkPoint = true;
+                                    Intent i = new Intent(MainActivity.this, SendReportActivity.class);
+                                    i.putExtra("Lat", mMap.getCameraPosition().target.latitude);
+                                    i.putExtra("Long", mMap.getCameraPosition().target.longitude);
+                                    fab.setImageResource(R.drawable.fab_add);
+                                    imgGetLocation.setVisibility(View.GONE);
+                                    startActivity(i);
+                                }
+                            }).show();
 
-            }else {
-                snackbar.dismiss();
-                fab.setImageResource(android.R.drawable.ic_input_add);
-                Intent i = new Intent(MainActivity.this, SendReportActivity.class);
-                i.putExtra("Lat", mMap.getCameraPosition().target.latitude);
-                i.putExtra("Long", mMap.getCameraPosition().target.longitude);
-                startActivity(i);
-                isMarkPoint = true;
+                } else {
+                    fab.setImageResource(R.drawable.fab_add);
+                    imgGetLocation.setVisibility(View.VISIBLE);
 
-            }
+                    isMarkPoint = true;
+                }
+                break;
+            case R.id.fab_landPO:
+                fab_Category.close(true);
+                break;
+            case R.id.fab_waterPO:
+                fab_Category.close(true);
+                break;
+            case R.id.fab_airPO:
+                fab_Category.close(true);
+                break;
+            case R.id.fab_thermalPO:
+                fab_Category.close(true);
+                break;
+            case R.id.fab_lightPO:
+                fab_Category.close(true);
+                break;
+            case R.id.fab_noisePO:
+                fab_Category.close(true);
+                break;
 
         }
     }
@@ -766,7 +885,7 @@ public class MainActivity extends AppCompatActivity
         locationRequest.setFastestInterval(5 * 1000);
     }
 
-//    Runs when a GoogleApiClient object successfully connects.
+    //    Runs when a GoogleApiClient object successfully connects.
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         // Config locationSettingRequest | Need to reference locationRequest
@@ -908,5 +1027,83 @@ public class MainActivity extends AppCompatActivity
     protected void onStop() {
         super.onStop();
         mGoogleApiClient.disconnect();
+    }
+
+    @Override
+    protected void onStart() {
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder()
+                .requestEmail()
+                .requestProfile()
+                .build();
+
+        googleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
+                .build();
+        googleApiClient.connect();
+
+        super.onStart();
+    }
+
+    private void showAdminMenu() {
+        // Reference to Administative Portal
+        Menu menu = navigationView.getMenu();
+        MenuItem item = menu.getItem(5);    // System
+        SubMenu subMenu = item.getSubMenu();
+        final MenuItem adminMenu = subMenu.getItem(0); // Admin Portal
+
+        // Show or hide admin menu
+        JsonObjectRequest objReq = new JsonObjectRequest(Request.Method.GET, url_RetrieveUserByID + getUserID(),
+                null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    if (response.getString("status").equals("success")) {
+                        JSONArray arr = response.getJSONArray("response");
+                        JSONObject user = arr.getJSONObject(0);
+                        if (user.getInt("is_admin") == 1) {
+                            adminMenu.setVisible(true);
+                        }
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(MainActivity.this, error.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        Volley.newRequestQueue(this).add(objReq);
+    }
+
+    private void logout() {
+        Auth.GoogleSignInApi.signOut(googleApiClient).setResultCallback(new ResultCallback<Status>() {
+            @Override
+            public void onResult(@NonNull Status status) {
+                finish();
+                startActivity(new Intent(MainActivity.this, SigninActivity.class));
+            }
+        });
+    }
+
+    private void showHeatMaps() {
+        mMap.clear();
+        LatLngBounds.Builder Lbuilder = new LatLngBounds.Builder();
+        List<LatLng> listMarkersHeatMaps = new ArrayList<>();
+        for (PollutionPoint po : listPo) {
+            listMarkersHeatMaps.add(new LatLng(po.getLat(), po.getLng()));
+            Lbuilder.include(new LatLng(po.getLat(), po.getLng()));
+        }
+        mProvider = new HeatmapTileProvider.Builder().data(listMarkersHeatMaps).radius(15).build();
+        mOverlay = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
+        final LatLngBounds bounds = Lbuilder.build();
+        mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
+            @Override
+            public void onMapLoaded() {
+                mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 50));
+            }
+        });
     }
 }

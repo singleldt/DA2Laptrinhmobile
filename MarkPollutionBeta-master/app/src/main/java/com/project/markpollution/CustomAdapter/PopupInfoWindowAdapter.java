@@ -55,7 +55,7 @@ public class PopupInfoWindowAdapter implements GoogleMap.InfoWindowAdapter {
     @Override
     public View getInfoContents(Marker marker) {
         if (view == null) {
-            view =inflater.inflate(R.layout.custom_info_window2, null);
+            view =inflater.inflate(R.layout.custom_info_window, null);
         }
 
         if (lastMarker == null || !lastMarker.getId().equals(marker.getId())) {

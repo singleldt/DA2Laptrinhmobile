@@ -2,8 +2,6 @@ package com.project.markpollution.CustomAdapter;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.res.Resources;
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,7 +13,6 @@ import com.project.markpollution.Objects.Category;
 import com.project.markpollution.R;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 
 /**
  * Created by Le Duc Thanh on 11/12/2016.
@@ -61,26 +58,19 @@ public class CustomSpinnerAdapter extends ArrayAdapter<Category> {
 
         TextView label = (TextView) row.findViewById(R.id.tvSpinner);
         ImageView icon = (ImageView) row.findViewById(R.id.imvSpinner);
-
-        if (position == 0) {
-            label.setText("Select category");
-        } else {
-            label.setText(tempValues.getName());
-            label.setTextColor(getContext().getResources().getColor(R.color.colorPrimary));
-            icon.setImageResource(setIconCategory(tempValues.getId()));
-
-        }
-
+        label.setText(tempValues.getName());
+        label.setTextColor(getContext().getResources().getColor(R.color.colorPrimary));
+        icon.setImageResource(setIconCategory(tempValues.getId()));
         return row;
     }
     private int setIconCategory(String id){
-        int idIcon = 0;
+        int idIcon =1;
         switch (id){
             case "1":
                 idIcon = R.drawable.land_icon;
                 break;
             case "2" :
-                idIcon = R.drawable.water;
+                idIcon = R.drawable.water_icon;
                 break;
             case "3":
                 idIcon = R.drawable.air_icon;
@@ -95,6 +85,7 @@ public class CustomSpinnerAdapter extends ArrayAdapter<Category> {
                 idIcon = R.drawable.noise_icon;
                 break;
             default:
+                idIcon = 1;
                 break;
 
         }

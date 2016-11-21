@@ -1,83 +1,90 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:maps="http://schemas.android.com/apk/res-auto"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:orientation="vertical"
-    android:background="@android:color/white"
-    android:weightSum="2"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    xmlns:maps="http://schemas.android.com/apk/res-auto"
+    android:fillViewport="true">
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="5dp"
-        android:paddingLeft="5dp"
-        android:paddingRight="5dp"
-        android:layout_weight="1"
-        android:weightSum="2"
-        android:orientation="horizontal"
-        >
+        android:padding="10dp">
 
-        <fragment
-            android:id="@+id/mapSubmit"
-            android:name="com.google.android.gms.maps.SupportMapFragment"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            maps:mapType="normal"
-            android:layout_height="match_parent" />
-
-        <ImageView
-            android:id="@+id/ivCameraSubmit"
-            android:layout_width="0dp"
-            android:layout_height="200dp"
-            android:layout_weight="1"
-            android:src="@drawable/capture_icon" />
-    </LinearLayout>
-
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingLeft="10dp"
-        android:paddingTop="5dp"
-        android:paddingRight="10dp"
-        android:layout_weight="1"
-        android:orientation="vertical">
-
-        <Spinner
-            android:id="@+id/spinnerCate"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:background="@drawable/style_boder_nobackgroud"
             android:layout_height="wrap_content"
-            />
+            android:layout_alignParentTop="true"
+            android:weightSum="2"
+            android:id="@+id/headerLayout">
 
-        <EditText
-            android:id="@+id/editTextSubmitTitle"
+            <fragment
+                android:id="@+id/mapSubmit"
+                android:name="com.google.android.gms.maps.SupportMapFragment"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="160sp"
+                maps:mapType="normal" />
+
+            <ImageView
+                android:id="@+id/ivCameraSubmit"
+                android:layout_width="0dp"
+                android:layout_height="160sp"
+                android:layout_weight="1"
+                android:src="@drawable/capture_icon" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginTop="5sp"
+            android:layout_below="@+id/headerLayout"
+            android:id="@+id/mainLayout"
+            android:orientation="vertical">
+
+            <Spinner
+                android:id="@+id/spinnerCate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/style_boder_nobackgroud" />
+
+            <EditText
+                android:id="@+id/editTextSubmitTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5sp"
+                android:background="@drawable/style_boder_nobackgroud"
+                android:hint="@string/hint_Title" />
+
+            <EditText
+                android:id="@+id/editTextSubmitDesc"
+                android:layout_width="match_parent"
+                android:layout_height="150dp"
+                android:layout_marginTop="5sp"
+                android:background="@drawable/style_boder_nobackgroud"
+                android:gravity="start"
+                android:hint="@string/hint_Description"
+                android:scrollbars="vertical" />
+
+        </LinearLayout>
+
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:background="@drawable/style_boder_nobackgroud"
             android:layout_height="wrap_content"
-            android:hint="@string/input_title" />
+            android:layout_alignParentBottom="true"
+            android:layout_below="@+id/mainLayout"
+            android:id="@+id/footerLayout">
+                <Button
+                    android:id="@+id/buttonSubmit"
+                    android:layout_width="match_parent"
+                    android:layout_alignParentBottom="true"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/nav_header_vertical_spacing"
+                    android:background="@drawable/style_boder_backgrounblue"
+                    android:text="@string/action_submit"
+                    android:textColor="@android:color/white" />
+        </RelativeLayout>
 
-        <EditText
-            android:id="@+id/editTextSubmitDesc"
-            android:layout_marginTop="5sp"
-            android:layout_width="match_parent"
-            android:layout_height="150dp"
-            android:background="@drawable/style_boder_nobackgroud"
-            android:gravity="start"
-            android:hint="@string/input_description"
-            android:scrollbars="vertical" />
+    </RelativeLayout>
 
-        <Button
-            android:id="@+id/buttonSubmit"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/nav_header_vertical_spacing"
-            android:background="@drawable/style_boder_backgrounblue"
-            android:text="Submit"
-            android:textColor="@android:color/white" />
-    </LinearLayout>
-
-
-</LinearLayout>
+</ScrollView>

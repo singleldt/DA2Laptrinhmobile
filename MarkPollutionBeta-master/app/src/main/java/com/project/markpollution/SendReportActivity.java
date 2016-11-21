@@ -1,6 +1,7 @@
 package com.project.markpollution;
 
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -15,8 +16,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -76,13 +79,14 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
     private String id_cate;     // to store id's category on selected item (In spinner)
     private FirebaseDatabase firebaseDatabase;
     private DatabaseReference databaseReference;
+    private ProgressDialog progressDialog;
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_send_report);
         // reference to map fragment then get async from it
-        this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE| WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.mapSubmit);
         mapFragment.getMapAsync(this);
@@ -92,9 +96,9 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
         databaseReference = firebaseDatabase.getReference();
         initView();
         captureOrGetFromGallery();
-        loadSpinner();
+        loadSpinnerCate();
         getCateID();
-
+//        this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE| WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
     }
 
     private void initView() {
@@ -103,7 +107,6 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
         btnSubmit = (Button) findViewById(R.id.buttonSubmit);
         ivCamera = (ImageView) findViewById(R.id.ivCameraSubmit);
         spCate = (Spinner) findViewById(R.id.spinnerCate);
-
         btnSubmit.setOnClickListener(this);
     }
 
@@ -118,11 +121,11 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
 
         LatLng point = new LatLng(lat, lng);
         googleMap.addMarker(new MarkerOptions().position(point)
-                .title("This is Pollution Point "))
+                .title(getResources().getString(R.string.title_inforwindow)))
                 .showInfoWindow();
 
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(point, 12));
-        googleMap.getUiSettings().setAllGesturesEnabled(true);
+//        googleMap.getUiSettings().setAllGesturesEnabled(true);
         googleMap.getUiSettings().setMapToolbarEnabled(false);
     }
 
@@ -131,6 +134,7 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
             @Override
             public void onClick(View v) {
                 final Dialog dialog = new Dialog(SendReportActivity.this);
+                dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
                 dialog.setContentView(R.layout.custom_dialog_choose_media);
                 dialog.show();
 
@@ -252,7 +256,7 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
         return sharedPreferences.getString("sharedpref_id_user","");
     }
 
-    private void loadSpinner(){
+    private void loadSpinnerCate(){
         StringRequest stringReq = new StringRequest(Request.Method.GET, url_retrieve_cate, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
@@ -268,7 +272,6 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
                     e.printStackTrace();
                 }
 
-//                ArrayAdapter<Category> adapter = new ArrayAdapter<>(SendReportActivity.this, android.R.layout.simple_list_item_1, listCate);
                 SpinnerAdapter adapter = new CustomSpinnerAdapter(SendReportActivity.this,R.layout.custom_spinner,listCate);
                 spCate.setAdapter(adapter);
             }
@@ -301,6 +304,8 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
     @Override
     public void onClick(View v) {
         if(v == btnSubmit){
+            showProgressDialog(getResources().getString(R.string.sending));
+
             StorageReference storeRef = storage.getReferenceFromUrl("gs://markpollution.appspot.com");
             StorageReference picRef = storeRef.child("images/IMG_" + new SimpleDateFormat("ddMMyyyy_hhmmss").format(new Date())+".jpg");
 
@@ -318,6 +323,7 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
             uploadTask.addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
+                    hideProgressDialog();
                     Toast.makeText(SendReportActivity.this, "Upload image failure", Toast.LENGTH_SHORT).show();
                 }
             }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
@@ -332,11 +338,12 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
                             DatabaseReference refReport = databaseReference.child("NewReports");
                             if(!response.equals("insert pollution point failure")){
                                 refReport.setValue(new Report(response, getUserID()));
-                                Toast.makeText(SendReportActivity.this, "Insert pollution successful", Toast
+                                Toast.makeText(SendReportActivity.this, R.string.insert_report_success, Toast
                                         .LENGTH_SHORT).show();
                             }
                             // return MainActivity and trigger Refresh data
                             MainActivity.triggerRefreshData = true;
+                            hideProgressDialog();
                             finish();
                         }
                     }, new Response.ErrorListener() {
@@ -344,6 +351,7 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
                         public void onErrorResponse(VolleyError error) {
                             Toast.makeText(SendReportActivity.this, error.getMessage(), Toast.LENGTH_SHORT).show();
                             Log.e("Volley", error.getMessage());
+                            hideProgressDialog();
                             finish();
                         }
                     }){
@@ -366,5 +374,16 @@ public class SendReportActivity extends AppCompatActivity implements OnMapReadyC
                 }
             });
         }
+    }
+
+    private void showProgressDialog(String msg){
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setMessage(msg);
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+    }
+
+    private void hideProgressDialog(){
+        progressDialog.hide();
     }
 }
