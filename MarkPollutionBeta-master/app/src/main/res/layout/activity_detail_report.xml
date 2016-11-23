@@ -44,7 +44,7 @@
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
                 android:padding="3sp"
-                android:src="@mipmap/ic_launcher" />
+                android:src="@drawable/ic_apps" />
 
             <TextView
                 android:id="@+id/textViewTimeDetail"
@@ -82,6 +82,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true"
                 android:layout_below="@+id/textViewEmailDetail"
                 android:src="@drawable/ic_spam_grey" />
 
@@ -91,15 +92,19 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/textViewEmailDetail"
                 android:layout_toLeftOf="@+id/imageViewSpam"
+                android:layout_toStartOf="@+id/imageViewSpam"
                 android:paddingRight="5sp"
-                android:src="@drawable/ic_has_resolved" />
+                android:paddingEnd="5sp"
+                android:src="@drawable/ic_has_resolved_grey" />
 
             <ImageView
                 android:id="@+id/imageViewDelete_Admin"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/textViewEmailDetail"
-                android:layout_toLeftOf="@+id/imageViewResolved"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true"
+                android:paddingEnd="5sp"
                 android:paddingRight="5sp"
                 android:src="@drawable/ic_delete"
                 android:visibility="invisible" />
@@ -110,7 +115,9 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/textViewEmailDetail"
                 android:layout_toLeftOf="@+id/imageViewDelete_Admin"
+                android:layout_toStartOf="@+id/imageViewDelete_Admin"
                 android:paddingRight="5sp"
+                android:paddingEnd="5sp"
                 android:src="@drawable/ic_spam"
                 android:visibility="invisible" />
 
@@ -125,15 +132,17 @@
                 android:background="@drawable/style_boder_backgrounblue"
                 android:text="Thermal Pollution"
                 android:textColor="#FFFFFF"
-                android:textStyle="normal|bold|italic" />
+                android:textStyle="bold|italic" />
 
             <RatingBar
                 android:id="@+id/ratingBar"
                 style="@style/customRatingBar"
                 android:layout_width="wrap_content"
+                android:layout_marginTop="5sp"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/imageViewResolved_Admin"
+                android:layout_below="@+id/imageViewAvatarDetail"
                 android:layout_toRightOf="@+id/imageViewDetail"
+                android:layout_toEndOf="@+id/imageViewDetail"
                 android:isIndicator="false"
                 android:numStars="5"
                 android:stepSize="1" />
@@ -141,12 +150,16 @@
                 android:id="@+id/textViewRateDetail"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginLeft="5sp"
+                android:layout_marginTop="5sp"
+                android:layout_marginStart="5sp"
                 android:layout_toRightOf="@id/ratingBar"
-                android:layout_below="@+id/imageViewResolved_Admin"
+                android:layout_toEndOf="@+id/ratingBar"
+                android:layout_below="@+id/imageViewAvatarDetail"
                 android:text="999 rated"
-                android:paddingLeft="5sp"
-                android:paddingRight="5sp"
-                android:textColor="@color/colorAccent"
+                android:paddingStart="5sp"
+                android:paddingEnd="5sp"
+                android:background="@drawable/texview_design"
                 android:textStyle="normal|italic" />
 
             <TextView

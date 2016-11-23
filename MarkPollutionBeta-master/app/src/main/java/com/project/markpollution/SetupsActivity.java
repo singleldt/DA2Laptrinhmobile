@@ -107,7 +107,7 @@ public class SetupsActivity extends AppCompatPreferenceActivity implements
 
         // Setting Dialog Title
         alertDialog.setTitle(getResources().getString(R.string.title_ask_setting));
-        alertDialog.setIcon(R.mipmap.ic_launcher);
+        alertDialog.setIcon(R.drawable.ic_apps);
 
         // Setting Dialog Message
         alertDialog.setMessage(getResources().getString(R.string.desc_ask_setting));

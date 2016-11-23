@@ -34,8 +34,8 @@
     <string name="menu_report_manager">Report Management</string>
     <string name="menu_system">System</string>
     <string name="menu_adminnistrative">Adminnistrative Portal</string>
-    <string name="tvRefresh">New pollution point(s) have reported! \\nClick here to reload...</string>
-    <string name="tvNewreport">Choose pollution point and click OK </string>
+    <string name="tvRefresh">New pollution point(s) have reported! \nClick here to reload...</string>
+    <string name="tvNewreport">Choose pollution point then click </string>
     <string name="conection_good">Good! Connected to Internet</string>
     <string name="conection_error">Good! Connected to Internet</string>
     <string name="register_success">Account has registered successful</string>
@@ -74,6 +74,19 @@
     <string name="light_pollution">Light pollution</string>
     <string name="noise_pollution">Noise pollution</string>
     <string name="sending">Sending...</string>
+    <string name="ask_quit">Are you sure quit ?</string>
+    <string name="confirm">CONFIRM</string>
+    <string name="yes">YES</string>
+    <string name="no">NO</string>
+    <string name="action_ok">OK</string>
+    <string name="show_all">Show all</string>
+    <string name="hello">Hello</string>
+    <string name="signin_as">Signed in as</string>
+    <string name="currentver">Current version :</string>
+    <string name="devby">Developer by MarkPollution Team</string>
+    <string name="addline1">137 Nguyen Thi Thap Street, District Lien Chieu,</string>
+    <string name="addline2">Da Nang City, Viet Nam</string>
+    <string name="rateus">Rate this App</string>
     <string-array name="pref_example_list_titles">
         <item>English</item>
         <item>Vietnamese</item>

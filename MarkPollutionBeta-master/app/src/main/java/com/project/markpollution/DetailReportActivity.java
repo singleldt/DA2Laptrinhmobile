@@ -121,6 +121,7 @@ public class DetailReportActivity extends AppCompatActivity implements OnMapRead
                 extras.putParcelable("imagebitmap", image);
                 intent.putExtras(extras);
                 startActivity(intent);
+                overridePendingTransition(R.anim.left_to_right, R.anim.right_to_left);
             }
         });
         etComment.addTextChangedListener(new TextWatcher() {
@@ -535,7 +536,7 @@ public class DetailReportActivity extends AppCompatActivity implements OnMapRead
 
     private void setIconResolve(boolean resolved){
         if(resolved){
-            ivResolved.setImageResource(R.drawable.ic_has_resolved);
+            ivResolved.setImageResource(R.drawable.ic_has_resolved_admin);
         }else{
             ivResolved.setImageResource(R.drawable.ic_has_resolved_grey);
         }

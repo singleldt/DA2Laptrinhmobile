@@ -34,8 +34,8 @@
     <string name="conection_error">Rất tiếc! Không kết nối với internet</string>
     <string name="conection_good">Tốt, Đã kết nối với internet</string>
     <string name="register_success">Đăng ký thành công</string>
-    <string name="loadingdata" translatable="false">Đang tải dữ liệu...</string>
-    <string name="hint_Comment" translatable="false">Nhập vào bình luận...</string>
+    <string name="loadingdata" >Đang tải dữ liệu...</string>
+    <string name="hint_Comment" >Nhập vào bình luận...</string>
     <string name="delete_byadmin">Bài đăng này đã được xóa bởi Admin. Nhấn Ok để quay lại.</string>
     <string name="askdelete_byadmin">Bạn chắc chắn muốn xóa ?</string>
     <string name="delete_successfull">Xóa thành công</string>
@@ -63,4 +63,18 @@
     <string name="noise_pollution">Ô nhiểm tiếng ồn</string>
     <string name="sending">Đang gửi</string>
     <string name="thermal_pollution">Ô nhiểm nhiệt độ</string>
+    <string name="water_pollution">Ô nhiễm nguồn nước</string>
+    <string name="action_ok">OK</string>
+    <string name="ask_quit">Bạn chắc chắn muốn thoát ?</string>
+    <string name="confirm">XÁC NHẬN</string>
+    <string name="hello">Xin chào</string>
+    <string name="no">Không</string>
+    <string name="show_all">Hiển thị tất cả</string>
+    <string name="signin_as">"Đăng nhập với "</string>
+    <string name="yes">Có</string>
+    <string name="addline1">137 đường Nguyễn Thị Thập,quận Liên Chiểu,</string>
+    <string name="addline2">TP Đà Nẵng, Việt Nam</string>
+    <string name="currentver">Phiên bản hiện tại :</string>
+    <string name="devby">Phát triển bới MarkPollution Team</string>
+    <string name="rateus">Bình chọn cho ứng dụng</string>
 </resources>

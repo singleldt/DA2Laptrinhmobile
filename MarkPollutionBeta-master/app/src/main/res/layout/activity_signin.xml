@@ -36,7 +36,8 @@
                 android:textColor="@color/colorPrimaryDark"
                 android:textSize="@dimen/slide_title"
                 android:textStyle="bold"
-                android:layout_gravity="center_horizontal" />
+                android:layout_gravity="center_horizontal"
+                android:id="@+id/tvAppname" />
 
             <TextView
                 android:layout_width="match_parent"

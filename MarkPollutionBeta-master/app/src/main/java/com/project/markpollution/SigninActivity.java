@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Build;
 import android.preference.Preference;
 import android.preference.PreferenceManager;
@@ -59,7 +60,8 @@ public class SigninActivity extends AppCompatActivity implements GoogleApiClient
     private Intent intent;
     private ProgressDialog progressDialog;
     RelativeLayout relativeLayoutSigin;
-
+    TextView tvAppname;
+    Typeface tf;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,6 +70,9 @@ public class SigninActivity extends AppCompatActivity implements GoogleApiClient
         }
         changeLocale(this, restoringPreferences());
         setContentView(R.layout.activity_signin);
+        tvAppname = (TextView) findViewById(R.id.tvAppname);
+        tf = Typeface.createFromAsset(getAssets(), "gunplayrg.ttf");
+        tvAppname.setTypeface(tf);
         relativeLayoutSigin = (RelativeLayout) findViewById(R.id.activity_signin);
         changeStatusBarColor();
         checkConnection();

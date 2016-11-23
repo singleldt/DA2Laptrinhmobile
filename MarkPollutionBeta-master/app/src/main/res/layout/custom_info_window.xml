@@ -7,8 +7,7 @@
         android:id="@+id/ivPicture_InfoWindow"
         android:layout_marginTop="3sp"
         android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:src="@mipmap/ic_launcher" />
+        android:layout_height="100dp"/>
     <TextView
         android:id="@+id/tvTime_InfoWindow"
         android:layout_width="wrap_content"
@@ -16,8 +15,9 @@
         android:layout_marginTop="2dp"
         android:layout_below="@+id/ivPicture_InfoWindow"
         android:layout_toRightOf="@+id/ivIconTime_InfoWindow"
+        android:layout_toEndOf="@+id/ivIconTime_InfoWindow"
         android:textColor="@color/timestamp"
-        android:textSize="@dimen/feed_item_timestamp"/>
+        android:textAppearance="@style/TextAppearance.AppCompat.Small"/>
     <ImageView
         android:id="@+id/ivIconTime_InfoWindow"
         android:layout_width="wrap_content"
@@ -32,6 +32,7 @@
         android:textColor="@color/bg_screen1"
         android:layout_height="wrap_content"
         android:layout_toRightOf="@+id/ivPicture_InfoWindow"
+        android:layout_toEndOf="@+id/ivPicture_InfoWindow"
         android:maxLines="1"
         android:ellipsize="end"
         android:padding="5dp"
@@ -44,6 +45,7 @@
         android:layout_height="60dp"
         android:layout_below="@+id/tvTitle_InfoWindow"
         android:layout_toRightOf="@+id/ivPicture_InfoWindow"
+        android:layout_toEndOf="@+id/ivPicture_InfoWindow"
         android:maxLines="3"
         android:ellipsize="end"
         android:textColor="#000000"
@@ -57,20 +59,21 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/tvDesc_InfoWindow"
         android:layout_toEndOf="@id/tvDesc_InfoWindow"
-        android:textColor="@color/Yellow"
+        android:textStyle="bold|italic"
         android:padding="2dp"
-        android:textSize="13sp"
+        android:textAppearance="@style/TextAppearance.AppCompat.Small"
         android:layout_toRightOf="@id/tvDesc_InfoWindow"/>
 
     <TextView
         android:id="@+id/tvComment_InfoWindow"
         android:layout_width="wrap_content"
-        android:textColor="@color/Yellow"
         android:layout_height="wrap_content"
         android:layout_below="@id/tvDesc_InfoWindow"
         android:layout_toLeftOf="@+id/imgRate"
+        android:layout_toStartOf="@+id/imgRate"
+        android:textStyle="bold|italic"
         android:padding="2dp"
-        android:textSize="13sp"/>
+        android:textAppearance="@style/TextAppearance.AppCompat.Small"/>
 
     <ImageView
         android:id="@+id/imgCmt"
@@ -78,6 +81,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/tvDesc_InfoWindow"
         android:layout_toLeftOf="@+id/tvComment_InfoWindow"
+        android:layout_toStartOf="@+id/tvComment_InfoWindow"
         android:src="@drawable/ic_comment_grey" />
 
     <ImageView
@@ -88,5 +92,6 @@
         android:layout_below="@+id/tvDesc_InfoWindow"
         android:layout_toLeftOf="@+id/tvRate_InfoWindow"
         android:layout_toStartOf="@+id/tvRate_InfoWindow"
-        android:layout_marginLeft="8dp"/>
+        android:layout_marginLeft="8dp"
+        android:layout_marginStart="8dp"/>
 </RelativeLayout>

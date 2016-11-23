@@ -1,11 +1,14 @@
 package com.project.markpollution;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -28,6 +31,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
@@ -137,7 +142,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private TileOverlay mOverlay;
     FloatingActionMenu fab_Category;
     com.github.clans.fab.FloatingActionButton fab_land, fab_water, fab_thermal,fab_noise,fab_light,fab_air;
-
+    private Animation animTextview;
+    MediaPlayer mediaPlayer = null;
+    private String emails,names;
+    DrawerLayout drawerLayout;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -150,11 +158,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         listenNewReport();
         listenDeleteReport();
         showAdminMenu();
+        Snackbar snackbarwellcom = Snackbar
+                .make(fab, getResources().getString(R.string.signin_as) +" "+ emails, Snackbar.LENGTH_LONG);
+
+        snackbarwellcom.show();
     }
 
     private void initView() {
+        mediaPlayer = MediaPlayer.create(this, R.raw.newreport);
+        mediaPlayer.start();
+        animTextview = AnimationUtils.loadAnimation(this, R.anim.scale);
+        animTextview.reset();
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+//        toolbar.setTitle(getResources().getString(R.string.hello)+", "+names);
+        drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         fab = (android.support.design.widget.FloatingActionButton) findViewById(R.id.fab);
         fab_Category  = (FloatingActionMenu) findViewById(R.id.fab_category);
         fab_air = (com.github.clans.fab.FloatingActionButton) findViewById(R.id.fab_airPO);
@@ -174,8 +192,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         imgGetLocation = (ImageView) findViewById(R.id.imgGetLocation);
         spnCate = (Spinner) findViewById(R.id.spnCateMap);
         tvRefresh = (TextView) findViewById(R.id.textViewRefresh);
-
-        // initiate the SlidingDrawer
         simpleSlidingDrawer = (SlidingDrawer) findViewById(R.id.simpleSlidingDrawer);
         final ImageButton handleButton = (ImageButton) findViewById(R.id.handle);
         simpleSlidingDrawer.setOnDrawerOpenListener(new SlidingDrawer.OnDrawerOpenListener() {
@@ -206,6 +222,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         fab_thermal.setOnClickListener(this);
         fab_air.setOnClickListener(this);
         fab_noise.setOnClickListener(this);
+        imgGetLocation.setOnClickListener(this);
     }
 
     // Fetch data from SigninActivity sent
@@ -228,7 +245,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     String desc = po.getString("desc");
                     String image = po.getString("image");
                     String time = po.getString("time");
-
                     listPo.add(new PollutionPoint(id_po, id_cate, id_user, lat, lng, title, desc, image, time));
                 }
 
@@ -246,7 +262,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         Intent intent = getIntent();
         String name = intent.getStringExtra("name");
+        names = intent.getStringExtra("name");
         String email = intent.getStringExtra("email");
+        emails = intent.getStringExtra("email");
         String avatar = intent.getStringExtra("avatar");
         tvNavName.setText(name);
         tvNavEmail.setText(email);
@@ -562,7 +580,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Report report = dataSnapshot.getValue(Report.class);
                 if (!report.getId_user().equals(getUserID())) {
                     if (!isFirstTimeLaunch) {
+                        if (mediaPlayer != null) {
+                            mediaPlayer.reset();
+                            mediaPlayer.release();
+                        }else {
+                            mediaPlayer.start();
+                        }
                         tvRefresh.setVisibility(View.VISIBLE);
+                        tvRefresh.startAnimation(animTextview);
                         refreshData();
                     }
                 }
@@ -756,7 +781,32 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            super.onBackPressed();
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setIcon(R.drawable.ic_apps);
+            builder.setTitle(getResources().getString(R.string.confirm));
+            builder.setMessage(getResources().getString(R.string.ask_quit));
+
+            builder.setPositiveButton(getResources().getString(R.string.yes), new DialogInterface.OnClickListener() {
+
+                public void onClick(DialogInterface dialog, int which) {
+                    // Do nothing but close the dialog
+                    System.exit(0);
+                }
+
+            });
+
+            builder.setNegativeButton(getResources().getString(R.string.no), new DialogInterface.OnClickListener() {
+
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    // Do nothing
+                    dialog.dismiss();
+                }
+            });
+
+            AlertDialog alert = builder.create();
+            alert.show();
+
         }
     }
 
@@ -775,7 +825,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_about) {
+            startActivity(new Intent(MainActivity.this,AboutUsActivity.class));
+            overridePendingTransition(R.anim.push_up_in, R.anim.push_up_out);
+            return true;
+        }
+        if(id == R.id.action_share)
+        {
+            Intent sharingIntent = new Intent(Intent.ACTION_SEND);
+            sharingIntent.setType("text/plain");
+            sharingIntent.putExtra(Intent.EXTRA_TEXT, "Good app : URL app");
+            startActivity(Intent.createChooser(sharingIntent, "Share via"));
             return true;
         }
 
@@ -792,16 +852,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             getRecentPollution();
         } else if (id == R.id.nav_reportMgr) {
             startActivity(new Intent(this, ReportManagementActivity.class));
+            overridePendingTransition(R.anim.push_up_in, R.anim.push_up_out);
         } else if (id == R.id.nav_nearbyPo) {
             getNearByPollution();
         } else if (id == R.id.nav_seriousPo) {
             getSeriousPollution();
         } else if (id == R.id.nav_admin) {
             startActivity(new Intent(this, AdminActivity.class));
+            overridePendingTransition(R.anim.push_up_in, R.anim.push_up_out);
         } else if (id == R.id.nav_logout) {
             logout();
         } else if (id == R.id.nav_setting) {
             startActivity(new Intent(this, SetupsActivity.class));
+            overridePendingTransition(R.anim.left_to_right, R.anim.right_to_left);
         } else if (id == R.id.nav_heatMaps) {
             showHeatMaps();
         }
@@ -815,31 +878,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void onClick(View view) {
         switch (view.getId()){
             case R.id.fab :
-                final Snackbar snackbar = Snackbar.make(view, R.string.tvNewreport, Snackbar.LENGTH_LONG);
-                if (isMarkPoint) {
-                    isMarkPoint = false;
-                    imgGetLocation.setVisibility(View.VISIBLE);
-                    fab.setImageResource(R.drawable.mr_ic_close_dark);
-                    snackbar.setAction("OK",
-                            new View.OnClickListener() {
-                                @Override
-                                public void onClick(View view) {
-                                    isMarkPoint = true;
-                                    Intent i = new Intent(MainActivity.this, SendReportActivity.class);
-                                    i.putExtra("Lat", mMap.getCameraPosition().target.latitude);
-                                    i.putExtra("Long", mMap.getCameraPosition().target.longitude);
-                                    fab.setImageResource(R.drawable.fab_add);
-                                    imgGetLocation.setVisibility(View.GONE);
-                                    startActivity(i);
-                                }
-                            }).show();
-
-                } else {
-                    fab.setImageResource(R.drawable.fab_add);
-                    imgGetLocation.setVisibility(View.VISIBLE);
-
-                    isMarkPoint = true;
-                }
+               handlerFabbutton(view);
                 break;
             case R.id.fab_landPO:
                 fab_Category.close(true);
@@ -859,6 +898,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.fab_noisePO:
                 fab_Category.close(true);
                 break;
+            case R.id.imgGetLocation :
+                imgGetLocation.setVisibility(View.GONE);
+                break;
 
         }
     }
@@ -868,8 +910,48 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Intent intent = new Intent(this, DetailReportActivity.class);
         intent.putExtra("id_po", marker.getTag().toString());
         startActivity(intent);
+        overridePendingTransition(R.anim.left_to_right, R.anim.right_to_left);
     }
+    private void handlerFabbutton(View view){
+        Snackbar snackbar = Snackbar.make(view, R.string.tvNewreport, 10000);
+        snackbar.setCallback(new Snackbar.Callback() {
+            @Override
+            public void onDismissed(Snackbar snackbar, int event) {
+                //see Snackbar.Callback docs for event details
+                fab.setImageResource(R.drawable.fab_add);
+                imgGetLocation.setVisibility(View.GONE);
+                isMarkPoint = true;
+            }
 
+            @Override
+            public void onShown(Snackbar snackbar) {
+            }
+        });
+        if (isMarkPoint) {
+            isMarkPoint = false;
+            imgGetLocation.setVisibility(View.VISIBLE);
+            fab.setImageResource(R.drawable.checkmark);
+            snackbar.setAction(getResources().getString(R.string.action_cancel),
+                    new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            isMarkPoint = true;
+                            fab.setImageResource(R.drawable.fab_add);
+                            imgGetLocation.setVisibility(View.GONE);
+                        }
+                    }).show();
+
+        } else {
+            fab.setImageResource(R.drawable.fab_add);
+            Intent i = new Intent(MainActivity.this, SendReportActivity.class);
+            i.putExtra("Lat", mMap.getCameraPosition().target.latitude);
+            i.putExtra("Long", mMap.getCameraPosition().target.longitude);
+            imgGetLocation.setVisibility(View.GONE);
+            startActivity(i);
+            overridePendingTransition(R.anim.left_to_right, R.anim.right_to_left);
+            isMarkPoint = true;
+        }
+    }
     private void configCheckLocation() {
         // Config googleApiClient
         mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -1003,11 +1085,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onResume() {
         super.onResume();
-        fetchDataFromServer();
 
-        // Within {@code onPause()}, we pause location updates, but leave the
-        // connection to GoogleApiClient intact.  Here, we resume receiving
-        // location updates if the user has requested them.
+        fetchDataFromServer();
         if (mGoogleApiClient.isConnected()) {
             startLocationUpdates();
         }
@@ -1106,4 +1185,5 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
     }
+
 }
